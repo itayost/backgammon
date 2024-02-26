@@ -100,7 +100,6 @@ class backgammon(abs_model):
             moves_made.append((position, position + fixed_jump))
         self.update_moves_list(jump)
         self.send_move(moves_made, self.moves)
-        print(f'eaten white: {self.board[0]}. eaten black: {self.board[25]}')
         return True
 
     def check_move(self, position, jump):

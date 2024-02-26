@@ -247,7 +247,6 @@ class BackgammonBoard(QGraphicsView, abs_gui):
         self.dice = dice
         self.moves = moves
         self.enable_choosing_cols()
-        print(self.moves)
 
     def send_new_game(self):
         for controller in self.list_of_controllers:
