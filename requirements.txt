@@ -1,1 +1,2 @@
 PyQt6
+numpy  # the hard level and training use the network in ai/td.py

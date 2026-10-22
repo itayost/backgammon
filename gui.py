@@ -23,6 +23,7 @@ class BackgammonBoard(QGraphicsView, abs_gui):
         self.throw_area = None
         self.current_player = 0
         self.dice = None
+        self.computer_players = set()
 
         self.point_radius = 25
         self.point_spacing = 61
@@ -68,8 +69,12 @@ class BackgammonBoard(QGraphicsView, abs_gui):
     def color_name(player):
         return "White" if Color.White.value == player else "Black"
 
+    def set_computer_players(self, players):
+        self.computer_players = set(players)
+
     def update_info_display(self, current_player, dice):
-        self.current_player_text.setPlainText(f"Current Player: {self.color_name(current_player)}")
+        computer = " (computer)" if current_player in self.computer_players else ""
+        self.current_player_text.setPlainText(f"Current Player: {self.color_name(current_player)}{computer}")
         self.dice_text.setPlainText(f"Dice: {dice}")
 
     def show_messages(self):
@@ -195,7 +200,12 @@ class BackgammonBoard(QGraphicsView, abs_gui):
         return destination < 1 or destination > 24
 
     def enable_choosing_cols(self, col=None):
-        if col is None:
+        if self.current_player in self.computer_players:
+            # Clicks are locked while the computer plays
+            list_of_cols = []
+            can_throw = False
+            col = None
+        elif col is None:
             list_of_cols = [move[0] for move in self.moves]
             can_throw = False
         else:

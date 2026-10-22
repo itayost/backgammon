@@ -1,0 +1,568 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-22T12:12:00Z",
+  "title": "Design System: Backgammon",
+  "extensions": {
+    "colorMeta": {
+      "bg": {
+        "role": "neutral",
+        "displayName": "Midnight Ink",
+        "canonical": "oklch(19.3% 0.012 205.7)",
+        "tonalRamp": [
+          "#060D0E",
+          "#1D2627",
+          "#394243",
+          "#566061",
+          "#788284",
+          "#99A4A5",
+          "#BFCACB",
+          "#E6F1F2"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Table Slate",
+        "canonical": "oklch(24.2% 0.017 208.9)",
+        "tonalRamp": [
+          "#040D0F",
+          "#1A2628",
+          "#354245",
+          "#536063",
+          "#758386",
+          "#96A5A7",
+          "#BBCBCD",
+          "#E2F2F5"
+        ]
+      },
+      "surface-2": {
+        "role": "neutral",
+        "displayName": "Raised Slate",
+        "canonical": "oklch(28.8% 0.022 205.8)",
+        "tonalRamp": [
+          "#020E10",
+          "#172729",
+          "#334345",
+          "#506164",
+          "#728486",
+          "#93A6A8",
+          "#B8CCCE",
+          "#DFF3F5"
+        ]
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "Felt Seam",
+        "canonical": "oklch(35.9% 0.027 207.1)",
+        "tonalRamp": [
+          "#000E11",
+          "#13282B",
+          "#2F4447",
+          "#4C6265",
+          "#6E8588",
+          "#8FA7AA",
+          "#B4CDD0",
+          "#DBF4F8"
+        ]
+      },
+      "text": {
+        "role": "neutral",
+        "displayName": "Bone Text",
+        "canonical": "oklch(93.0% 0.020 84.6)",
+        "tonalRamp": [
+          "#0F0A03",
+          "#292319",
+          "#453F34",
+          "#635D51",
+          "#867F73",
+          "#A7A194",
+          "#CDC7B9",
+          "#F5EEE0"
+        ]
+      },
+      "text-muted": {
+        "role": "neutral",
+        "displayName": "Sage Mist",
+        "canonical": "oklch(74.2% 0.022 185.3)",
+        "tonalRamp": [
+          "#020E0C",
+          "#182825",
+          "#334441",
+          "#50625F",
+          "#728582",
+          "#93A6A3",
+          "#B9CCC9",
+          "#DFF4F0"
+        ]
+      },
+      "text-disabled": {
+        "role": "neutral",
+        "displayName": "Faded Sage",
+        "canonical": "oklch(59.3% 0.024 185.6)",
+        "tonalRamp": [
+          "#010E0D",
+          "#162826",
+          "#324441",
+          "#4F625F",
+          "#718582",
+          "#92A7A3",
+          "#B7CDC9",
+          "#DEF4F1"
+        ]
+      },
+      "accent": {
+        "role": "primary",
+        "displayName": "Lamp Amber",
+        "canonical": "oklch(78.1% 0.146 72.7)",
+        "tonalRamp": [
+          "#130900",
+          "#341F00",
+          "#583806",
+          "#805300",
+          "#AD720A",
+          "#D89117",
+          "#FEB856",
+          "#FFEBD3"
+        ]
+      },
+      "accent-hover": {
+        "role": "primary",
+        "displayName": "Amber Glow",
+        "canonical": "oklch(83.0% 0.123 75.9)",
+        "tonalRamp": [
+          "#120900",
+          "#332001",
+          "#573901",
+          "#7D5403",
+          "#AA740E",
+          "#CD963E",
+          "#F5BC66",
+          "#FEECD2"
+        ]
+      },
+      "accent-ink": {
+        "role": "primary",
+        "displayName": "Amber Ink",
+        "canonical": "oklch(18.9% 0.026 77.5)",
+        "tonalRamp": [
+          "#110A01",
+          "#2B2216",
+          "#483E30",
+          "#665C4D",
+          "#897F6F",
+          "#ABA090",
+          "#D1C6B5",
+          "#F8EDDC"
+        ]
+      },
+      "danger": {
+        "role": "feedback",
+        "displayName": "Ember",
+        "canonical": "oklch(74.0% 0.126 27.6)",
+        "tonalRamp": [
+          "#1E0101",
+          "#4A0203",
+          "#741915",
+          "#983B33",
+          "#C05F55",
+          "#E68175",
+          "#FEB0A6",
+          "#FFE9E6"
+        ]
+      },
+      "danger-surface": {
+        "role": "feedback",
+        "displayName": "Ember Surface",
+        "canonical": "oklch(23.8% 0.026 23.2)",
+        "tonalRamp": [
+          "#150706",
+          "#301F1E",
+          "#4D3B39",
+          "#6C5857",
+          "#8F7B79",
+          "#B19C9A",
+          "#D8C1BF",
+          "#FFE9E7"
+        ]
+      },
+      "danger-line": {
+        "role": "feedback",
+        "displayName": "Ember Seam",
+        "canonical": "oklch(34.9% 0.071 26.3)",
+        "tonalRamp": [
+          "#1E0101",
+          "#401310",
+          "#602F2B",
+          "#814D48",
+          "#A7706A",
+          "#CA918A",
+          "#F3B6AF",
+          "#FFE9E6"
+        ]
+      },
+      "success": {
+        "role": "feedback",
+        "displayName": "Win Green",
+        "canonical": "oklch(81.0% 0.092 156.0)",
+        "tonalRamp": [
+          "#000F05",
+          "#022C17",
+          "#044D2B",
+          "#296D47",
+          "#4E9169",
+          "#70B389",
+          "#95DAAE",
+          "#C6FEDA"
+        ]
+      },
+      "board-frame": {
+        "role": "board",
+        "displayName": "Walnut",
+        "canonical": "oklch(30.1% 0.033 56.3)",
+        "tonalRamp": [
+          "#150701",
+          "#302014",
+          "#4D3B2F",
+          "#6C594C",
+          "#907C6E",
+          "#B29D8E",
+          "#D9C2B3",
+          "#FFEADC"
+        ]
+      },
+      "board-bar": {
+        "role": "board",
+        "displayName": "Dark Walnut",
+        "canonical": "oklch(25.8% 0.028 56.6)",
+        "tonalRamp": [
+          "#140802",
+          "#2F2117",
+          "#4C3C31",
+          "#6A5A4E",
+          "#8E7C70",
+          "#B09D91",
+          "#D6C3B6",
+          "#FEEADD"
+        ]
+      },
+      "board-felt": {
+        "role": "board",
+        "displayName": "Deep Felt",
+        "canonical": "oklch(37.7% 0.049 183.3)",
+        "tonalRamp": [
+          "#000F0C",
+          "#022B26",
+          "#1D4842",
+          "#3C6760",
+          "#5F8A83",
+          "#7FACA4",
+          "#A5D2CA",
+          "#CBFAF2"
+        ]
+      },
+      "point-light": {
+        "role": "board",
+        "displayName": "Bone Point",
+        "canonical": "oklch(85.1% 0.036 85.4)",
+        "tonalRamp": [
+          "#110A00",
+          "#2C230E",
+          "#483E29",
+          "#675C46",
+          "#8A7F68",
+          "#ACA088",
+          "#D2C6AD",
+          "#FAEDD4"
+        ]
+      },
+      "point-dark": {
+        "role": "board",
+        "displayName": "Oxblood Point",
+        "canonical": "oklch(52.3% 0.131 29.8)",
+        "tonalRamp": [
+          "#1F0000",
+          "#4A0401",
+          "#76170E",
+          "#9A3A2E",
+          "#C25E50",
+          "#E78070",
+          "#FDB1A4",
+          "#FEE9E5"
+        ]
+      },
+      "checker-white": {
+        "role": "board",
+        "displayName": "Ivory Checker",
+        "canonical": "oklch(95.3% 0.016 86.4)",
+        "tonalRamp": [
+          "#0E0B05",
+          "#27241B",
+          "#433F37",
+          "#615D54",
+          "#848076",
+          "#A6A197",
+          "#CCC7BC",
+          "#F3EEE3"
+        ]
+      },
+      "checker-white-rim": {
+        "role": "board",
+        "displayName": "Ivory Rim",
+        "canonical": "oklch(80.8% 0.026 81.1)",
+        "tonalRamp": [
+          "#110A01",
+          "#2A2315",
+          "#473F30",
+          "#655C4D",
+          "#887F6F",
+          "#AAA090",
+          "#D0C6B5",
+          "#F8EDDB"
+        ]
+      },
+      "checker-black": {
+        "role": "board",
+        "displayName": "Onyx Checker",
+        "canonical": "oklch(22.7% 0.004 286.1)",
+        "tonalRamp": [
+          "#0B0B0D",
+          "#242426",
+          "#3F3F42",
+          "#5D5D60",
+          "#808082",
+          "#A1A1A4",
+          "#C7C7CA",
+          "#EEEEF1"
+        ]
+      },
+      "checker-black-rim": {
+        "role": "board",
+        "displayName": "Onyx Rim",
+        "canonical": "oklch(41.1% 0.010 286.0)",
+        "tonalRamp": [
+          "#0B0B0F",
+          "#232329",
+          "#3F3F45",
+          "#5D5D63",
+          "#7F7F86",
+          "#A1A1A8",
+          "#C6C6CE",
+          "#EEEEF5"
+        ]
+      },
+      "scrim": {
+        "role": "neutral",
+        "displayName": "Night Scrim",
+        "canonical": "rgba(5, 10, 11, 0.72)"
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "The game result and the token sheet title; the home wordmark is the 80px exception."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Screen titles."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Card and section titles."
+      },
+      "number": {
+        "displayName": "Number",
+        "purpose": "Pip counts and statistics, tabular figures."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Button labels and running text."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Setting names, segment labels."
+      },
+      "caption": {
+        "displayName": "Caption",
+        "purpose": "Uppercase kickers, table headers, the Your turn tag."
+      }
+    },
+    "shadows": [
+      {
+        "name": "piece",
+        "value": "0 2px 6px rgba(0,0,0,0.35)",
+        "purpose": "Checkers."
+      },
+      {
+        "name": "thrown-die",
+        "value": "0 4px 10px rgba(0,0,0,0.4)",
+        "purpose": "Dice on the board."
+      },
+      {
+        "name": "board-and-dialog",
+        "value": "0 16px 40px rgba(0,0,0,0.55)",
+        "purpose": "The board frame and modal dialogs."
+      },
+      {
+        "name": "focus-ring",
+        "value": "0 0 0 2px #0E1617, 0 0 0 4px #F0A73A",
+        "purpose": "Keyboard focus on every control."
+      }
+    ],
+    "motion": [
+      {
+        "name": "checker-slide",
+        "value": "180ms ease-out",
+        "purpose": "A checker moving between points."
+      },
+      {
+        "name": "screen-change",
+        "value": "220ms ease",
+        "purpose": "Switching between screens."
+      },
+      {
+        "name": "computer-step-slow",
+        "value": "900ms",
+        "purpose": "Pause between computer checker moves, slow setting."
+      },
+      {
+        "name": "computer-step-normal",
+        "value": "500ms",
+        "purpose": "Pause between computer checker moves, default."
+      },
+      {
+        "name": "computer-step-fast",
+        "value": "200ms",
+        "purpose": "Pause between computer checker moves, fast setting."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "design-window",
+        "value": "1280px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The one main action of a screen or dialog: Start game, Roll dice, Done, Rematch.",
+      "html": "<button class=\"ds-btn-primary\">Roll dice</button>",
+      "css": ".ds-btn-primary { font-family: Inter, system-ui, sans-serif; font-size: 16px; font-weight: 600; height: 48px; padding: 0 24px; border-radius: 10px; cursor: pointer; transition: background 0.15s ease; background: #F0A73A; color: #1A1206; border: 0; } .ds-btn-primary:hover { background: #F5BC66; } .ds-btn-primary:focus-visible { outline: 2px solid #F0A73A; outline-offset: 2px; } .ds-btn-primary:active { transform: translateY(1px); }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Other actions: Undo, Statistics, Settings, New game.",
+      "html": "<button class=\"ds-btn-secondary\">Undo</button>",
+      "css": ".ds-btn-secondary { font-family: Inter, system-ui, sans-serif; font-size: 16px; font-weight: 600; height: 48px; padding: 0 24px; border-radius: 10px; cursor: pointer; transition: background 0.15s ease; background: #1E2E30; color: #EEE7D9; border: 1px solid #2C4144; } .ds-btn-secondary:hover { background: #24373A; } .ds-btn-secondary:focus-visible { outline: 2px solid #F0A73A; outline-offset: 2px; } .ds-btn-secondary:disabled { color: #6F8380; border-color: transparent; cursor: default; }"
+    },
+    {
+      "name": "Danger Button",
+      "kind": "button",
+      "refersTo": "button-danger",
+      "description": "Destructive actions only: Resign, Reset statistics.",
+      "html": "<button class=\"ds-btn-danger\">Resign</button>",
+      "css": ".ds-btn-danger { font-family: Inter, system-ui, sans-serif; font-size: 16px; font-weight: 600; height: 48px; padding: 0 24px; border-radius: 10px; cursor: pointer; transition: background 0.15s ease; background: #2A1A19; color: #F08A7E; border: 1px solid #5A2A26; } .ds-btn-danger:hover { background: #331F1D; } .ds-btn-danger:focus-visible { outline: 2px solid #F0A73A; outline-offset: 2px; }"
+    },
+    {
+      "name": "Segmented Control",
+      "kind": "custom",
+      "refersTo": "segment-selected",
+      "description": "Choosing one of a few options: level, move speed, color.",
+      "html": "<div class=\"ds-seg\" role=\"radiogroup\" aria-label=\"Level\"><button class=\"ds-seg-item\" role=\"radio\" aria-checked=\"false\">Easy</button><button class=\"ds-seg-item\" role=\"radio\" aria-checked=\"true\">Medium</button><button class=\"ds-seg-item\" role=\"radio\" aria-checked=\"false\">Hard</button></div>",
+      "css": ".ds-seg { display: inline-flex; gap: 4px; padding: 4px; background: #0E1617; border: 1px solid #2C4144; border-radius: 12px; } .ds-seg-item { height: 40px; padding: 0 20px; border: 0; border-radius: 8px; background: transparent; color: #9DB0AD; font-family: Inter, system-ui, sans-serif; font-size: 15px; font-weight: 500; cursor: pointer; } .ds-seg-item:hover { color: #EEE7D9; } .ds-seg-item[aria-checked=\"true\"] { background: #F0A73A; color: #1A1206; font-weight: 600; } .ds-seg-item:focus-visible { outline: 2px solid #F0A73A; outline-offset: 2px; }"
+    },
+    {
+      "name": "Switch",
+      "kind": "input",
+      "description": "On and off settings: show legal moves, sound effects.",
+      "html": "<button class=\"ds-switch\" role=\"switch\" aria-checked=\"true\" aria-label=\"Sound effects\"><span class=\"ds-switch-knob\"></span></button>",
+      "css": ".ds-switch { width: 52px; height: 30px; padding: 3px; border: 0; border-radius: 999px; background: #2C4144; display: inline-flex; justify-content: flex-start; cursor: pointer; transition: background 0.15s ease; } .ds-switch-knob { width: 24px; height: 24px; border-radius: 999px; background: #9DB0AD; } .ds-switch[aria-checked=\"true\"] { background: #F0A73A; justify-content: flex-end; } .ds-switch[aria-checked=\"true\"] .ds-switch-knob { background: #1A1206; } .ds-switch:focus-visible { outline: 2px solid #F0A73A; outline-offset: 2px; }"
+    },
+    {
+      "name": "Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Flat container for a group of settings, stats or a summary.",
+      "html": "<section class=\"ds-card\"><h2 class=\"ds-card-title\">Gameplay</h2><p class=\"ds-card-text\">Highlight the checkers you can move and where they can go.</p></section>",
+      "css": ".ds-card { background: #162224; border: 1px solid #2C4144; border-radius: 16px; padding: 24px; color: #EEE7D9; font-family: Inter, system-ui, sans-serif; max-width: 360px; } .ds-card-title { margin: 0 0 8px; font-family: Outfit, system-ui, sans-serif; font-size: 22px; line-height: 28px; font-weight: 600; } .ds-card-text { margin: 0; font-size: 14px; line-height: 20px; color: #9DB0AD; }"
+    },
+    {
+      "name": "Player Card",
+      "kind": "custom",
+      "description": "A player in the game panel; the active player gets the amber border and the Your turn tag.",
+      "html": "<div class=\"ds-player ds-player-active\"><span class=\"ds-player-chip\"></span><span class=\"ds-player-name\"><strong>You</strong><span>White</span></span><span class=\"ds-player-pips\"><strong>92</strong><span>pips</span></span><span class=\"ds-player-tag\">Your turn</span></div>",
+      "css": ".ds-player { display: grid; grid-template-columns: 36px 1fr auto; align-items: center; gap: 12px 14px; width: 272px; padding: 16px; background: #162224; border: 2px solid #2C4144; border-radius: 16px; color: #EEE7D9; font-family: Inter, system-ui, sans-serif; } .ds-player-active { border-color: #F0A73A; } .ds-player-chip { width: 36px; height: 36px; border-radius: 999px; background: #F4EFE4; border: 3px solid #C9BFAE; box-sizing: border-box; } .ds-player-name { display: flex; flex-direction: column; font-size: 16px; } .ds-player-name span { font-size: 13px; color: #9DB0AD; } .ds-player-pips { display: flex; flex-direction: column; align-items: flex-end; } .ds-player-pips strong { font-family: Outfit, system-ui, sans-serif; font-size: 24px; font-weight: 600; font-variant-numeric: tabular-nums; } .ds-player-pips span { font-size: 12px; color: #9DB0AD; } .ds-player-tag { grid-column: 1 / -1; justify-self: start; padding: 4px 10px; border-radius: 999px; background: #F0A73A; color: #1A1206; font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }"
+    },
+    {
+      "name": "Checkers and target point",
+      "kind": "custom",
+      "refersTo": "checker-white",
+      "description": "Ivory and onyx checkers, the selected ring, and an amber legal target with its landing spot.",
+      "html": "<div class=\"ds-felt\"><span class=\"ds-checker ds-white\"></span><span class=\"ds-checker ds-black\"></span><span class=\"ds-checker ds-white ds-selected\"></span><span class=\"ds-point\"><span class=\"ds-landing\"></span></span></div>",
+      "css": ".ds-felt { display: inline-flex; align-items: flex-start; gap: 14px; padding: 14px; background: #1F4A44; border: 14px solid #3B2A1E; border-radius: 16px; } .ds-checker { width: 50px; height: 50px; border-radius: 999px; box-sizing: border-box; box-shadow: 0 2px 6px rgba(0,0,0,0.35); } .ds-white { background: #F4EFE4; border: 3px solid #C9BFAE; } .ds-black { background: #1C1C1E; border: 3px solid #4A4A50; } .ds-selected { box-shadow: 0 0 0 3px #F0A73A, 0 2px 6px rgba(0,0,0,0.35); } .ds-point { position: relative; width: 56px; height: 120px; display: flex; justify-content: center; } .ds-point::before { content: \"\"; position: absolute; inset: 0; background: #F0A73A; clip-path: polygon(0 0, 100% 0, 50% 100%); } .ds-landing { position: relative; width: 50px; height: 50px; border-radius: 999px; border: 2px dashed #1A1206; box-sizing: border-box; background: rgba(26,18,6,0.12); }"
+    },
+    {
+      "name": "Die",
+      "kind": "custom",
+      "refersTo": "die",
+      "description": "A die on the board; used dice fade to 35%.",
+      "html": "<div class=\"ds-dice\"><span class=\"ds-die\"><i></i><i></i><i></i><i></i><i></i></span><span class=\"ds-die ds-die-used\"><i></i><i></i><i></i></span></div>",
+      "css": ".ds-dice { display: inline-flex; gap: 12px; padding: 16px; background: #1F4A44; border-radius: 10px; } .ds-die { position: relative; width: 48px; height: 48px; border-radius: 10px; background: #F4EFE4; box-shadow: 0 4px 10px rgba(0,0,0,0.4); } .ds-die i { position: absolute; width: 8px; height: 8px; border-radius: 999px; background: #1A1206; } .ds-die i:nth-child(1) { top: 9px; left: 9px; } .ds-die i:nth-child(2) { bottom: 9px; right: 9px; } .ds-die i:nth-child(3) { top: 20px; left: 20px; } .ds-die i:nth-child(4) { top: 9px; right: 9px; } .ds-die i:nth-child(5) { bottom: 9px; left: 9px; } .ds-die-used { opacity: 0.35; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Midnight Felt",
+    "overview": "A late-night game table. The room is dark and calm, a deep ink-teal that recedes, and the board sits in the middle of it like the only lit object: a walnut frame, teal felt, bone and oxblood points, checkers with real weight. Everything around the board is quiet so the decisions on it carry the weight.\n\nOne warm color does all the talking. Amber marks what the player can act on right now: the primary button, the selected checker, the points a checker can legally reach, the active player. When amber appears, it is an invitation. Everything else stays in the ink and bone range.\n\nThe interface is a desktop game window, not a website. Controls are solid and tactile: firm 48 px buttons, filled states, clear disabled states. Panels are flat and separated by tone; only physical objects (the board, checkers, dice) and modal dialogs cast shadows.",
+    "keyCharacteristics": [
+      "Dark ink-teal room, warm lit board as the focal point",
+      "A single amber accent reserved for actionable and active things",
+      "Outfit for anything that is read at a glance (titles, numbers), Inter for everything that is read in full",
+      "Flat panels, lifted physical pieces",
+      "Generous 44 to 56 px hit targets everywhere, including the board"
+    ],
+    "rules": [
+      {
+        "name": "The One Lamp Rule",
+        "body": "Amber means \"you can act on this\" or \"this is active\". Never use it for decoration, headings, links that do nothing, or a losing state.",
+        "section": "colors"
+      },
+      {
+        "name": "The Board Owns The Warmth Rule",
+        "body": "Warm colors (walnut, bone, oxblood, amber) belong to the board and to actions. App chrome stays in the cool ink and sage range.",
+        "section": "colors"
+      },
+      {
+        "name": "The Glance Rule",
+        "body": "If the player reads it in under a second (a title, a number, a result), it is Outfit. If they read it as a sentence, it is Inter.",
+        "section": "typography"
+      },
+      {
+        "name": "The Tabular Numbers Rule",
+        "body": "Every number that can change during play uses tabular figures, so pip counts and statistics do not jitter.",
+        "section": "typography"
+      },
+      {
+        "name": "The Only Physical Things Cast Shadows Rule",
+        "body": "If you could pick it up off a real table (board, checker, die) or it floats over the game (a dialog), it has a shadow. Cards and panels never do.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do keep amber for actionable or active elements only (The One Lamp Rule).",
+      "Do keep every interactive element at least 44 by 44 px, including points and checkers on the board.",
+      "Do use tabular figures for pip counts, statistics and anything that updates during play.",
+      "Do show the board behind pause and game-over dialogs, dimmed by the Night Scrim, so the player never loses context.",
+      "Do give every control a visible 2 px amber focus ring for keyboard play."
+    ],
+    "donts": [
+      "Don't put shadows on cards or panels; only physical pieces and dialogs are lifted.",
+      "Don't use green for buttons or anything except a win.",
+      "Don't introduce a second accent color; new states are expressed with tone, borders or amber.",
+      "Don't use warm colors in app chrome; walnut, bone and oxblood belong to the board.",
+      "Don't use gradients, glows or decorative textures on the felt or the chrome."
+    ]
+  }
+}
