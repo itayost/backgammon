@@ -1,4 +1,4 @@
-from abstract_classes import *
+from abstract_classes import abs_model, abs_gui
 
 
 class controller:
@@ -22,6 +22,9 @@ class controller:
 
     def to_gui_winner(self, player):
         self.gui.get_winner(player)
+
+    def to_gui_no_moves(self, player, dice):
+        self.gui.get_no_moves(player, dice)
 
     def to_model_try_move(self, start, jump):
         self.model.get_move(start, jump)

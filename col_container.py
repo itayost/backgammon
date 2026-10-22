@@ -17,11 +17,8 @@ class Colable(Clickable):
 
 
 class PointItem(QGraphicsEllipseItem, Colable):
-    s = pyqtSignal()
-
     def __init__(self, x, y, radius, player, col):
-        super().__init__(x, y, radius * 2, radius * 2, col=None)
-        Colable.__init__(self, col)
+        super().__init__(0, 0, radius * 2, radius * 2, col=col)
         self.player = player
         self.color = "white" if player == 1 else "black"
         self.outline = "black" if player == 1 else "white"
@@ -40,8 +37,7 @@ class PointItem(QGraphicsEllipseItem, Colable):
         if not flag:
             self.outline = "black" if self.player == 1 else "white"
         else:
-            self.outline = ("skyblue"
-                            "")
+            self.outline = "skyblue"
         self.update()
 
     def mousePressEvent(self, event):
@@ -60,8 +56,6 @@ class PointItem(QGraphicsEllipseItem, Colable):
 
 
 class TriangleItem(QGraphicsPolygonItem, Colable):
-    s = pyqtSignal()
-
     def __init__(self, col, x, y, height, width, color, direction):
         triangle_up = QPolygonF([
             QPointF(x, y - height),
@@ -74,8 +68,7 @@ class TriangleItem(QGraphicsPolygonItem, Colable):
             QPointF(x - (width / 2), y)
         ])
         triangle = triangle_up if direction == "up" else triangle_down
-        super().__init__(triangle, col=None)
-        Colable.__init__(self, col)
+        super().__init__(triangle, col=col)
         self.outline = color
         self.color = color
         self.setEnabled(False)
@@ -119,15 +112,21 @@ class TriangleItem(QGraphicsPolygonItem, Colable):
 
 class throwing_rectangle(QGraphicsRectItem, Colable):
     def __init__(self, col, x, y, width, height):
-        super().__init__(x, y, width, height, col=None)
-        Colable.__init__(self, col)
-        self.setEnabled(True)
+        super().__init__(x, y, width, height, col=col)
+        self.outline = "black"
+        self.setEnabled(False)
         self.setAcceptHoverEvents(True)
 
     def paint(self, painter: QPainter, option: QStyleOptionGraphicsItem, widget: QWidget = None):
         painter.setBrush(QColor("brown"))
-        painter.setPen(QColor("black"))
+        pen = QPen(QColor(self.outline))
+        pen.setWidth(2)
+        painter.setPen(pen)
         painter.drawRect(self.rect())
+
+    def is_marked(self, flag):
+        self.outline = "skyblue" if flag else "black"
+        self.update()
 
     def mousePressEvent(self, event):
         self.clicked.communicate.emit()

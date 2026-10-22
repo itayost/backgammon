@@ -1,6 +1,13 @@
 import random
 from abstract_classes import abs_model
-from controller import *
+
+# Board layout: index 0 is the bar of player 1 (white), index 25 is the bar of
+# player -1 (black), indices 1-24 are the points. Every cell is [count, owner].
+# Player 1 moves from low to high indices and bears off past 24,
+# player -1 moves from high to low indices and bears off below 1.
+WHITE_BAR = 0
+BLACK_BAR = 25
+CHECKERS_PER_PLAYER = 15
 
 
 class backgammon(abs_model):
@@ -11,8 +18,6 @@ class backgammon(abs_model):
         self.current_player = 0
         self.dice = []
         self.moves = []
-        self.p1_throwd = 15
-        self.p2_throwd = 15
 
         self.new_game()
 
@@ -26,41 +31,19 @@ class backgammon(abs_model):
     def new_game(self):
         self.board = self.init_board()
         self.current_player = random.choice([-1, 1])
-        self.p1_throwd = 15
-        self.p2_throwd = 15
         self.send_new_game(self.board)
         self.new_turn()
 
-    def print_board(self):
-        med = int(len(self.board) / 2)
-        for i in range(med - 1, 0, -1):
-            space = ''
-            if self.board[i][1] != -1:
-                space = ' '
-            print(f'{space}{self.board[i][0] * self.board[i][1]} |', end='')
-        print(f'p1 eatens = {self.board[0][0]}')
-        for i in range(med, len(self.board) - 1):
-            space = ''
-            if self.board[i][1] != -1:
-                space = ' '
-            print(f'{space}{self.board[i][0] * self.board[i][1]} |', end='')
-        print(f'p2 eatens = {self.board[len(self.board) - 1][0]}')
-
     def new_turn(self):
-        self.current_player *= -1
-        self.dice = self.roll_dice()
-        self.moves = self.possible_moves(self.dice)
+        # A player without a legal move loses the turn, so keep passing until someone can move
+        while True:
+            self.current_player *= -1
+            self.dice = self.roll_dice()
+            self.moves = self.possible_moves(self.board, self.current_player, self.dice)
+            if len(self.moves) > 0:
+                break
+            self.send_no_moves()
         self.send_new_turn()
-
-    def update_moves_list(self, jump):
-        if jump in self.dice:
-            self.dice.remove(jump)
-            if len(self.dice) == 0:
-                self.new_turn()
-                return
-            self.moves = self.possible_moves(self.dice)
-            if len(self.moves) == 0:
-                self.new_turn()
 
     def roll_dice(self):
         die1 = random.randint(1, 6)
@@ -70,142 +53,150 @@ class backgammon(abs_model):
         return [die1, die2]
 
     def make_move(self, position, jump):
-        moves_made = []
-        fixed_jump = jump * self.current_player
-        if not self.check_move(position, jump):
+        if (position, jump) not in self.moves:
             return False
+
+        player = self.current_player
+        moves_made, thrown = self.apply_move(self.board, player, position, jump)
+        self.dice.remove(jump)
+
+        if thrown:
+            if self.checkers_left(player) == 0:
+                self.moves = []
+                self.send_throw(position)
+                self.send_winner()
+                return True
+            self.moves = self.possible_moves(self.board, player, self.dice)
+            self.send_throw(position)
         else:
-            self.board[position][0] -= 1
-            if self.board[position][0] == 0:
-                self.board[position][1] = 0
-            if 1 > position + fixed_jump or position + fixed_jump >= len(self.board) - 1:
-                return self.make_throw(position, jump)
-            elif self.board[position + fixed_jump][1] != self.current_player:
-                if self.board[position + fixed_jump][1] == 0:
-                    self.board[position + fixed_jump][1] = self.current_player
-                    self.board[position + fixed_jump][0] += 1
-                else:
-                    eaten_dest = self.eaten(self.current_player * (- 1))
-                    moves_made.append((position + fixed_jump, eaten_dest))
-                    self.board[position + fixed_jump][1] = self.current_player
-            else:
-                self.board[position + fixed_jump][0] += 1
-            moves_made.append((position, position + fixed_jump))
-        self.update_moves_list(jump)
-        self.send_move(moves_made, self.moves)
+            self.moves = self.possible_moves(self.board, player, self.dice)
+            self.send_move(moves_made, self.moves)
+
+        if len(self.moves) == 0:
+            self.new_turn()
         return True
 
-    def check_move(self, position, jump):
-        # Check if jump is in dice
-        if jump not in self.dice:
+    @staticmethod
+    def bar_of(player):
+        return WHITE_BAR if player == 1 else BLACK_BAR
+
+    @staticmethod
+    def owns(board, position, player):
+        return board[position][0] > 0 and board[position][1] == player
+
+    def has_eaten(self, board, player):
+        return board[self.bar_of(player)][0] > 0
+
+    def can_start_throwing(self, board, player):
+        home = range(19, 25) if player == 1 else range(1, 7)
+        for i in range(len(board)):
+            if i not in home and self.owns(board, i, player):
+                return False
+        return True
+
+    def check_move(self, board, player, position, jump):
+        # Check if the move is within bounds and there are checkers of the player on the starting point
+        if position < 0 or position >= len(board) or not self.owns(board, position, player):
             return False
 
         # Check if player has eaten pieces and chose the position to take them out
-        if self.has_eaten():
-            if self.current_player == 1 and position != 0:
-                return False
-            elif self.current_player == -1 and position != len(self.board) - 1:
-                return False
-
-        # Check if the move is within bounds
-        if position < 0 or position >= len(self.board):
+        if self.has_eaten(board, player) and position != self.bar_of(player):
             return False
 
-        # Check if there are checkers on the starting point
-        if self.board[position][1] != self.current_player:
-            return False
+        destination = position + (jump * player)
+        if 1 <= destination <= 24:
+            # The destination must be empty, hold only one opposing checker or belong to the player
+            return board[destination][0] <= 1 or board[destination][1] == player
 
-        # Check if the destination is within bounds
-        destination = position + (jump * self.current_player)
-        if destination < 1 or destination >= len(self.board) - 1:
-            if self.can_start_throwing(self.current_player):
-                return True
+        # Throwing a checker off the board
+        if not self.can_start_throwing(board, player):
             return False
-
-        # Check if the destination is empty or has only one opposing checker
-        if self.board[destination][0] <= 1 or self.board[destination][1] == self.current_player:
+        distance = 25 - position if player == 1 else position
+        if jump == distance:
             return True
-        return False
-
-    def can_start_throwing(self, player):
-        start_index = 1 if player == 1 else 7
-        end_index = 19 if player == 1 else 25
-
-        for i in range(start_index, end_index):
-            if self.board[i][1] == player:
+        # A higher die may be used only when no checker sits farther from home
+        farther = range(19, position) if player == 1 else range(position + 1, 7)
+        for i in farther:
+            if self.owns(board, i, player):
                 return False
-
         return True
 
-    def make_throw(self, position, jump):
-        if self.current_player == 1:
-            self.p1_throwd -= 1
-            if self.p1_throwd == 0:
-                self.send_winner()
-                return
-        else:
-            self.p2_throwd -= 1
-            if self.p1_throwd == 0:
-                self.send_winner()
-                return
-        self.update_moves_list(jump)
-        self.send_throw(position)
+    def apply_move(self, board, player, position, jump):
+        """Applies a valid move on the board, returns the moves made for the gui and whether a checker was thrown"""
+        moves_made = []
+        board[position][0] -= 1
+        if board[position][0] == 0 and position != self.bar_of(player):
+            board[position][1] = 0
 
-    def possible_throws(self, dice):
+        destination = position + (jump * player)
+        if destination < 1 or destination > 24:
+            return moves_made, True
+
+        if board[destination][1] == -player and board[destination][0] == 1:
+            eaten_dest = self.bar_of(-player)
+            board[eaten_dest][0] += 1
+            board[eaten_dest][1] = -player
+            moves_made.append((destination, eaten_dest))
+            board[destination][0] = 0
+        board[destination][0] += 1
+        board[destination][1] = player
+        moves_made.append((position, destination))
+        return moves_made, False
+
+    def single_moves(self, board, player, dice):
         all_moves = []
-        start_index = 19 if self.current_player == 1 else 1
-        end_index = 25 if self.current_player == 1 else 7
-        for i in range(start_index, end_index):
-            if self.board[i][1] == self.current_player:
-                for jump in set(dice):
-                    if self.check_move(i, jump):
+        for i in range(len(board)):
+            if self.owns(board, i, player):
+                for jump in sorted(set(dice)):
+                    if self.check_move(board, player, i, jump):
                         all_moves.append((i, jump))
         return all_moves
 
-    def has_eaten(self):
-        if self.current_player == -1 and self.board[len(self.board) - 1][0] > 0:
-            return True
-        elif self.current_player == 1 and self.board[0][0] > 0:
-            return True
-        return False
-
-    def eaten(self, eaten_player):
-        if eaten_player == -1:
-            self.board[len(self.board) - 1][0] += 1
-            self.board[len(self.board) - 1][1] = -1
-            return len(self.board) - 1
-        else:
-            self.board[0][0] += 1
-            self.board[0][1] = 1
+    def max_dice_used(self, board, player, dice):
+        """The maximal number of dice the player can use from this board"""
+        if len(dice) == 0:
             return 0
+        # Throwing off the last checker ends the game, the remaining dice are not needed
+        if not any(cell[0] > 0 and cell[1] == player for cell in board):
+            return len(dice)
+        best = 0
+        for position, jump in self.single_moves(board, player, dice):
+            next_board = [cell[:] for cell in board]
+            self.apply_move(next_board, player, position, jump)
+            next_dice = list(dice)
+            next_dice.remove(jump)
+            best = max(best, 1 + self.max_dice_used(next_board, player, next_dice))
+            if best == len(dice):
+                break
+        return best
 
-    def eaten_moves(self, dice):
-        all_moves = []
-        position = 0
-        if self.current_player == -1:
-            position = len(self.board) - 1
-        for jump in set(dice):
-            if self.check_move(position, jump):
-                all_moves.append((position, jump))
-        return all_moves
+    def possible_moves(self, board, player, dice):
+        """Legal moves according to the rules: as many dice as possible must be used,
+        and when only one of two different dice can be used it must be the higher one"""
+        moves = self.single_moves(board, player, dice)
+        if len(dice) < 2 or len(moves) == 0:
+            return moves
 
-    def possible_moves(self, dice):
-        if self.has_eaten():
-            return self.eaten_moves(dice)
+        used = {}
+        for position, jump in moves:
+            next_board = [cell[:] for cell in board]
+            self.apply_move(next_board, player, position, jump)
+            next_dice = list(dice)
+            next_dice.remove(jump)
+            used[(position, jump)] = 1 + self.max_dice_used(next_board, player, next_dice)
 
-        elif self.can_start_throwing(self.current_player):
-            return self.possible_throws(dice)
+        best = max(used.values())
+        moves = [move for move in moves if used[move] == best]
+        if best == 1 and len(set(dice)) == 2:
+            higher = [move for move in moves if move[1] == max(dice)]
+            if len(higher) > 0:
+                moves = higher
+        return moves
 
-        else:
-            all_moves = []
-            for i in range(1, len(self.board) - 1):
-                if self.current_player == self.board[i][1]:
-                    for jump in set(dice):
-                        if self.check_move(i, jump):
-                            all_moves.append((i, jump))
-            return all_moves
+    def checkers_left(self, player):
+        return sum(cell[0] for cell in self.board if cell[1] == player)
 
-    def add_controller(self, listener: controller):
+    def add_controller(self, listener):
         self.list_of_controllers.append(listener)
         listener.to_gui_new_game(self.board)
         listener.to_gui_new_turn(self.current_player, self.dice, self.moves)
@@ -213,7 +204,6 @@ class backgammon(abs_model):
     def send_new_game(self, board):
         for controller in self.list_of_controllers:
             controller.to_gui_new_game(board)
-            self.send_new_turn()
 
     def send_move(self, moves_made, moves_available):
         for controller in self.list_of_controllers:
@@ -230,6 +220,10 @@ class backgammon(abs_model):
     def send_new_turn(self):
         for controller in self.list_of_controllers:
             controller.to_gui_new_turn(self.current_player, self.dice, self.moves)
+
+    def send_no_moves(self):
+        for controller in self.list_of_controllers:
+            controller.to_gui_no_moves(self.current_player, self.dice)
 
     def get_new_game(self):
         self.new_game()

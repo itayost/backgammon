@@ -1,9 +1,6 @@
-import sys
-from col_container import *
-from controller import *
+from col_container import TriangleItem, PointItem, throwing_rectangle, communication, Colable
 from abstract_classes import abs_gui
-from PyQt6.QtWidgets import QApplication, QGraphicsView, QGraphicsScene, \
-    QGraphicsTextItem, QGraphicsRectItem, QDialog
+from PyQt6.QtWidgets import QGraphicsView, QGraphicsScene, QGraphicsTextItem, QGraphicsRectItem, QDialog
 from PyQt6.QtGui import QColor
 from enum import Enum
 
@@ -21,6 +18,9 @@ class BackgammonBoard(QGraphicsView, abs_gui):
         self.list_of_controllers = []
         self.dice_text = None
         self.current_player_text = None
+        self.message_text = None
+        self.messages = []
+        self.throw_area = None
         self.current_player = 0
         self.dice = None
 
@@ -37,6 +37,7 @@ class BackgammonBoard(QGraphicsView, abs_gui):
         self.board_of_points = []
         self.board_of_cols = []
 
+        self.setWindowTitle("Backgammon")
         self.scene = QGraphicsScene(self)
         self.setScene(self.scene)
         self.init_board()
@@ -54,21 +55,31 @@ class BackgammonBoard(QGraphicsView, abs_gui):
         self.dice_text.setPos(self.board_width / 2 + self.point_spacing, self.board_height / 2)
         self.scene.addItem(self.dice_text)
 
+        self.message_text = QGraphicsTextItem("")
+        self.message_text.setPos(self.point_spacing, self.board_height / 2 - 25)
+        self.scene.addItem(self.message_text)
+
         self.init_triangles()
         self.init_mid()
         self.init_thrown_section()
         self.setSceneRect(0, 0, self.board_width, self.board_height)
 
+    @staticmethod
+    def color_name(player):
+        return "White" if Color.White.value == player else "Black"
+
     def update_info_display(self, current_player, dice):
-        color = "White" if Color.White.value == current_player else "Black"
-        self.current_player_text.setPlainText(f"Current Player: {color}")
+        self.current_player_text.setPlainText(f"Current Player: {self.color_name(current_player)}")
         self.dice_text.setPlainText(f"Dice: {dice}")
+
+    def show_messages(self):
+        self.message_text.setPlainText("\n".join(self.messages))
 
     def init_triangles(self):
         y_up = 0
         for i in range(0, 13):
             x_up = self.calc_x_of_col(i)
-            color = "darkyellow" if i % 2 == 0 else "red"
+            color = "darkgoldenrod" if i % 2 == 0 else "red"
 
             triangle_up = TriangleItem(i, x_up + self.point_radius, y_up, self.triangle_height, self.triangle_width,
                                        color, "down")
@@ -79,7 +90,7 @@ class BackgammonBoard(QGraphicsView, abs_gui):
         y_down = self.board_height
         for i in range(13, 26):
             x_down = self.calc_x_of_col(i)
-            color = "darkyellow" if i % 2 == 0 else "red"
+            color = "darkgoldenrod" if i % 2 == 0 else "red"
 
             triangle_down = TriangleItem(i, x_down + self.point_radius, y_down, self.triangle_height,
                                          self.triangle_width, color, "up")
@@ -94,10 +105,10 @@ class BackgammonBoard(QGraphicsView, abs_gui):
         self.scene.addItem(rect1)
 
     def init_thrown_section(self):
-        throw = throwing_rectangle(-1, self.calc_x_of_col(1) + self.point_spacing, 0, self.point_spacing,
-                                   self.board_height)
-        throw.clicked.communicate.connect(self.select_throw)
-        self.scene.addItem(throw)
+        self.throw_area = throwing_rectangle(-1, self.calc_x_of_col(1) + self.point_spacing, 0, self.point_spacing,
+                                            self.board_height)
+        self.throw_area.clicked.communicate.connect(self.select_throw)
+        self.scene.addItem(self.throw_area)
 
     def print_col(self, col):
         count = len(self.board_of_points[col])
@@ -152,24 +163,25 @@ class BackgammonBoard(QGraphicsView, abs_gui):
                     if self.selected_piece == self.sender().point_item.col:
                         self.selected_piece = None
                     else:
-                        self.selected_col = self.sender().point_item.col
-                        self.send_move(self.selected_piece, abs(self.selected_col - self.selected_piece))
+                        start = self.selected_piece
+                        jump = abs(self.sender().point_item.col - start)
                         self.selected_piece = None
                         self.selected_col = None
+                        self.send_move(start, jump)
                 else:
                     self.selected_piece = self.sender().point_item.col
                 self.enable_choosing_cols(self.selected_piece)
 
     def select_throw(self):
         if self.sender() is not None and isinstance(self.sender(), communication):
-            if self.sender().point_item is not None and isinstance(self.sender().point_item, Clickable):
-                if isinstance(self.sender().point_item, throwing_rectangle):
-                    if self.selected_piece is not None:
-                        self.selected_col = self.find_die()
-                        self.send_move(self.selected_piece, self.selected_col)
-                        self.selected_piece = None
-                        self.selected_col = None
-                        self.enable_choosing_cols(self.selected_piece)
+            if isinstance(self.sender().point_item, throwing_rectangle) and self.selected_piece is not None:
+                jump = self.find_die()
+                start = self.selected_piece
+                self.selected_piece = None
+                self.selected_col = None
+                if jump is not None:
+                    self.send_move(start, jump)
+                self.enable_choosing_cols(self.selected_piece)
 
     def setEnabled_col(self, col, flag):
         self.board_of_cols[col].setEnabled(flag)
@@ -178,12 +190,23 @@ class BackgammonBoard(QGraphicsView, abs_gui):
             piece.setEnabled(flag)
             piece.is_marked(flag)
 
+    def is_throw_move(self, move):
+        destination = move[0] + (move[1] * self.current_player)
+        return destination < 1 or destination > 24
+
     def enable_choosing_cols(self, col=None):
-        list_of_cols = [move[0] for move in self.moves] if col is None else [(move[1] * self.current_player) + col for
-                                                                             move in self.moves if move[0] == col]
+        if col is None:
+            list_of_cols = [move[0] for move in self.moves]
+            can_throw = False
+        else:
+            list_of_cols = [move[0] + (move[1] * self.current_player) for move in self.moves
+                            if move[0] == col and not self.is_throw_move(move)]
+            can_throw = any(move[0] == col and self.is_throw_move(move) for move in self.moves)
         for i in range(0, len(self.board_of_points)):
             flag_piece = i in list_of_cols or i == col
             self.setEnabled_col(i, flag_piece)
+        self.throw_area.setEnabled(can_throw)
+        self.throw_area.is_marked(can_throw)
 
     def calc_x_of_col(self, col):
         if col == 0 or col == 25:
@@ -204,49 +227,61 @@ class BackgammonBoard(QGraphicsView, abs_gui):
             return self.board_height - (self.point_radius * 2)
 
     def find_die(self):
-        edge = 0 if self.current_player == -1 else 25
-        distance = (edge - self.selected_piece) * self.current_player
-        optional_dice = min((num for num in self.dice if num >= distance), default=None)
-        return optional_dice
+        # The smallest die that throws the selected checker off the board
+        return min((move[1] for move in self.moves if move[0] == self.selected_piece and self.is_throw_move(move)),
+                   default=None)
 
-    def add_controller(self, listener: controller):
+    def add_controller(self, listener):
         self.list_of_controllers.append(listener)
 
     def get_new_game(self, board):
         self.selected_piece = None
         self.selected_col = None
+        self.messages = []
+        self.show_messages()
         self.clear_board()
         self.init_pieces_board(board)
 
     def get_move(self, moves_made, moves_available, dice):
         for move in moves_made:
             self.move_piece(move[0], move[1])
-        self.moves = moves_available
-        self.dice = dice
-        self.update_info_display(self.current_player, self.dice)
-
-    def get_winner(self, player):
-        winner_dialog = WinnerDialog(player)
-        result = winner_dialog.exec()
-
-        if result == 1:
-            self.send_new_game()
-        else:
-            self.close()
+        self.after_move(moves_available, dice)
 
     def get_throw(self, position, moves_available, dice):
         temp = self.board_of_points[position].pop()
         self.scene.removeItem(temp)
+        self.print_col(position)
+        self.after_move(moves_available, dice)
+
+    def after_move(self, moves_available, dice):
         self.moves = moves_available
         self.dice = dice
+        self.messages = []
+        self.show_messages()
         self.update_info_display(self.current_player, self.dice)
+        self.enable_choosing_cols(self.selected_piece)
+
+    def get_winner(self, player):
+        winner_dialog = WinnerDialog(self.color_name(player), self)
+        result = winner_dialog.exec()
+
+        if result == QDialog.DialogCode.Accepted.value:
+            self.send_new_game()
+        else:
+            self.close()
 
     def get_new_turn(self, player, dice, moves):
         self.current_player = player
+        self.selected_piece = None
+        self.selected_col = None
         self.update_info_display(player, dice)
         self.dice = dice
         self.moves = moves
         self.enable_choosing_cols()
+
+    def get_no_moves(self, player, dice):
+        self.messages.append(f"{self.color_name(player)} rolled {dice} and has no moves")
+        self.show_messages()
 
     def send_new_game(self):
         for controller in self.list_of_controllers:
