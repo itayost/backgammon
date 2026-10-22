@@ -10,7 +10,7 @@ class WinnerDialog(QDialog):
 
         layout = QVBoxLayout()
 
-        message_label = QLabel(f"Player {winner} won! Would you like to play again?")
+        message_label = QLabel(f"{winner} won! Would you like to play again?")
         layout.addWidget(message_label)
 
         yes_button = QPushButton("Yes")

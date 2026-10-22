@@ -1,8 +1,7 @@
 from abc import ABC, abstractmethod
 
-import controller
 
-
+# abs_gui can not inherit ABC, its implementation is also a Qt widget and the two metaclasses conflict
 class abs_gui:
     @abstractmethod
     def get_new_game(self, board):
@@ -10,6 +9,10 @@ class abs_gui:
 
     @abstractmethod
     def get_move(self, moves_made, moves_available, dice):
+        pass
+
+    @abstractmethod
+    def get_throw(self, position, moves_available, dice):
         pass
 
     @abstractmethod
@@ -21,6 +24,10 @@ class abs_gui:
         pass
 
     @abstractmethod
+    def get_no_moves(self, player, dice):
+        pass
+
+    @abstractmethod
     def send_new_game(self):
         pass
 
@@ -29,14 +36,11 @@ class abs_gui:
         pass
 
     @abstractmethod
-    def add_controller(self, listener: controller):
-        pass
-
-    def get_throw(self, position, moves_available, dice):
+    def add_controller(self, listener):
         pass
 
 
-class abs_model:
+class abs_model(ABC):
     @abstractmethod
     def send_new_game(self, board):
         pass
@@ -58,6 +62,10 @@ class abs_model:
         pass
 
     @abstractmethod
+    def send_no_moves(self):
+        pass
+
+    @abstractmethod
     def get_new_game(self):
         pass
 
@@ -66,5 +74,5 @@ class abs_model:
         pass
 
     @abstractmethod
-    def add_controller(self, listener: controller):
+    def add_controller(self, listener):
         pass
