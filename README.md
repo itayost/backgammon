@@ -9,8 +9,11 @@ pip install -r requirements.txt
 python main.py
 ```
 
-A dialog at startup chooses the mode: two players, against the computer (choose its color and level)
-or computer against computer.
+The game opens on the home screen. New game asks for the mode: two players, against the computer
+(choose its color and level) or computer against computer.
+
+The look follows the Midnight Felt design system in `DESIGN.md`; `ui/theme.py` holds the same tokens and
+a test keeps the two in sync. The Outfit and Inter fonts are bundled in `assets/fonts` under the SIL Open Font License.
 
 Click a highlighted checker to select it, then click a highlighted point to move it.
 When a checker can be borne off, the brown area on the right is highlighted.

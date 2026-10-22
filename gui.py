@@ -24,6 +24,8 @@ class BackgammonBoard(QGraphicsView, abs_gui):
         self.current_player = 0
         self.dice = None
         self.computer_players = set()
+        # Called instead of closing when the players do not want another game
+        self.on_quit = None
 
         self.point_radius = 25
         self.point_spacing = 61
@@ -277,6 +279,8 @@ class BackgammonBoard(QGraphicsView, abs_gui):
 
         if result == QDialog.DialogCode.Accepted.value:
             self.send_new_game()
+        elif self.on_quit is not None:
+            self.on_quit()
         else:
             self.close()
 
