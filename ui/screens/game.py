@@ -1,12 +1,13 @@
 from PyQt6.QtCore import Qt, QTimer, pyqtSignal, QPointF
 from PyQt6.QtGui import QKeySequence, QShortcut, QPainter, QColor, QPen
-from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QFrame, QLabel, QMessageBox, QDialog,
-                             QSizePolicy)
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QFrame, QMessageBox, QSizePolicy
 
 import rules
+from game.config import GameConfig
 from game.session import GameSession, Phase, NO_LEGAL_MOVES
 from ui import theme
 from ui.board.board_widget import BoardWidget, BoardView
+from ui.screens.overlays import PauseOverlay, GameOverOverlay
 from ui.widgets.basics import button, label, icon_button, MENU_ICON
 
 COLOR_NAMES = {1: 'White', -1: 'Black'}
@@ -76,14 +77,28 @@ class PlayerCard(QFrame):
             restyle(self)
 
 
+def config_for(computer_levels):
+    """The setup a set of computer players stands for, when no config is given"""
+    if not computer_levels:
+        return GameConfig('friend')
+    level = next(iter(computer_levels.values()))
+    if len(computer_levels) == 2:
+        return GameConfig('self_play', level)
+    human = -next(iter(computer_levels))
+    return GameConfig('computer', level, 'white' if human == 1 else 'black')
+
+
 class GameScreen(QWidget):
     leave = pyqtSignal()
+    rematch = pyqtSignal()
+    new_game = pyqtSignal()
 
-    def __init__(self, computer_levels, step_delay_ms=500, session=None, parent=None):
+    def __init__(self, computer_levels, config=None, step_delay_ms=500, session=None, parent=None):
         super().__init__(parent)
         self.setObjectName('screen')
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self.computer_levels = dict(computer_levels)
+        self.config = config or config_for(self.computer_levels)
         self.session = session or GameSession()
         self.selected = None
 
@@ -146,9 +161,9 @@ class GameScreen(QWidget):
         self.roll_button.clicked.connect(self.roll)
         self.undo_button.clicked.connect(self.undo)
         self.done_button.clicked.connect(self.done)
-        self.menu_button.clicked.connect(self.confirm_leave)
+        self.menu_button.clicked.connect(self.open_pause)
         for keys, action in (('R', self.roll), ('Space', self.roll), ('Ctrl+Z', self.undo), ('U', self.undo),
-                             ('Return', self.done), ('D', self.done), ('Escape', self.confirm_leave)):
+                             ('Return', self.done), ('D', self.done), ('Escape', self.toggle_pause)):
             QShortcut(QKeySequence(keys), self, action, context=Qt.ShortcutContext.WidgetWithChildrenShortcut)
 
         self.ai = None
@@ -159,6 +174,20 @@ class GameScreen(QWidget):
             computers = {player: ComputerPlayer(level) for player, level in self.computer_levels.items()}
             self.ai = AIController(self.session, computers, step_delay_ms=step_delay_ms)
         self.session.add_listener(self.on_event)
+
+        against_computer = len(self.computer_levels) == 1
+        self.pause_overlay = PauseOverlay(
+            self, can_resign=len(self.computer_levels) < 2,
+            leaving_note='Leaving ends this game. Against the computer it counts as a loss.'
+            if against_computer else 'Leaving ends this game.')
+        self.pause_overlay.resume.connect(self.close_pause)
+        self.pause_overlay.restart.connect(self.rematch)
+        self.pause_overlay.resign.connect(self.confirm_resign)
+        self.pause_overlay.main_menu.connect(self.leave)
+        self.result_overlay = GameOverOverlay(self)
+        self.result_overlay.rematch.connect(self.rematch)
+        self.result_overlay.new_game.connect(self.new_game)
+        self.result_overlay.main_menu.connect(self.leave)
 
     def start(self):
         self.session.start()
@@ -195,7 +224,11 @@ class GameScreen(QWidget):
     # Actions
 
     def human_turn(self):
-        return self.session.phase != Phase.GAME_OVER and self.is_human(self.session.player)
+        return (self.session.phase != Phase.GAME_OVER and self.is_human(self.session.player)
+                and not self.overlay_open())
+
+    def overlay_open(self):
+        return self.pause_overlay.isVisible() or self.result_overlay.isVisible()
 
     def roll(self):
         if self.human_turn():
@@ -246,10 +279,46 @@ class GameScreen(QWidget):
         return {self.session.destination(start, jump) for start, jump in self.session.legal
                 if start == self.selected} - {None}
 
-    def confirm_leave(self):
-        answer = QMessageBox.question(self, 'Leave the game', 'Leaving ends this game. Go to the main menu?')
+    # Pause menu
+
+    def open_pause(self):
+        if self.overlay_open() or self.session.phase == Phase.GAME_OVER:
+            return
+        if self.ai is not None:
+            self.ai.pause()
+        self.selected = None
+        self.pause_overlay.open()
+        self.refresh()
+
+    def close_pause(self):
+        self.pause_overlay.hide()
+        if self.ai is not None:
+            self.ai.resume()
+        self.setFocus()
+        self.refresh()
+
+    def toggle_pause(self):
+        if self.pause_overlay.isVisible():
+            self.close_pause()
+        else:
+            self.open_pause()
+
+    def resigning_player(self):
+        """Against the computer the human resigns, between friends the player whose turn it is"""
+        humans = [p for p in (1, -1) if self.is_human(p)]
+        return humans[0] if len(humans) == 1 else self.session.player
+
+    def confirm_resign(self):
+        player = self.resigning_player()
+        answer = QMessageBox.question(self, 'Resign', f'Resign this game as {COLOR_NAMES[player].lower()}?')
         if answer == QMessageBox.StandardButton.Yes:
-            self.leave.emit()
+            self.resign(player)
+
+    def resign(self, player):
+        self.pause_overlay.hide()
+        self.session.resign(player)
+        if self.ai is not None:
+            self.ai.resume()
 
     # Session events
 
@@ -258,18 +327,37 @@ class GameScreen(QWidget):
             self.selected = None
         self.refresh()
         if event == 'game_over':
-            QTimer.singleShot(0, self.show_result)
+            # Leave the final position on screen for a moment before the result
+            QTimer.singleShot(0 if self.session.stats.resigned else 700, self.show_result)
 
     def show_result(self):
-        from winner_dialog import WinnerDialog
-        winner = self.session.stats.winner
-        name = self.player_name(winner)
-        title = 'You' if name == 'You' else ('The computer' if name == 'Computer' else COLOR_NAMES[winner])
-        dialog = WinnerDialog(title, self)
-        if dialog.exec() == QDialog.DialogCode.Accepted.value:
-            self.start()
+        if self.session.phase != Phase.GAME_OVER or self.result_overlay.isVisible():
+            return
+        self.result_overlay.show_result(*self.result_summary())
+
+    def result_summary(self):
+        """(title, won, subtitle, tiles) for the game over overlay"""
+        stats = self.session.stats
+        winner, loser = stats.winner, -stats.winner
+        turns = stats.turns + (0 if stats.resigned else 1)
+        how = 'by resignation' if stats.resigned else f'after {turns} turns'
+        humans = [p for p in (1, -1) if self.is_human(p)]
+        if len(humans) == 1:
+            human = humans[0]
+            won = winner == human
+            level = self.computer_levels[-human].capitalize()
+            title = 'You won' if won else 'You lost'
+            subtitle = f'against the computer on {level}, {how}'
+            tiles = [(turns, 'turns'), (stats.hits[human], 'hits by you'),
+                     (self.session.pips(loser), 'computer pips left' if won else 'your pips left')]
         else:
-            self.leave.emit()
+            won = len(humans) == 2
+            title = f'{COLOR_NAMES[winner]} won'
+            names = {p: self.player_name(p) for p in (1, -1)}
+            subtitle = f'{names[winner]} beat {names[loser]}, {how}' if won else f'Computer against computer, {how}'
+            tiles = [(turns, 'turns'), (stats.hits[winner], f'hits by {COLOR_NAMES[winner].lower()}'),
+                     (self.session.pips(loser), f'{COLOR_NAMES[loser].lower()} pips left')]
+        return title, won, subtitle, tiles
 
     def shutdown(self):
         if self.ai is not None:

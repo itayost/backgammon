@@ -52,13 +52,71 @@ class AppWindowTest(unittest.TestCase):
         self.assertEqual(self.window.navigator.current(), 'home')
 
     def test_game_starts_and_leaves_cleanly(self):
-        self.window.start_game({1: 'medium', -1: 'easy'}, step_delay_ms=0)
+        from game.config import GameConfig
+        self.window.step_delay_ms = 0
+        self.window.start_game(GameConfig('self_play', 'easy'))
         self.assertEqual(self.window.navigator.current(), 'game')
         screen = self.window.navigator.screens['game']
         self.window.leave_game()
         self.assertEqual(self.window.navigator.current(), 'home')
         self.assertNotIn('game', self.window.navigator.screens)
         self.assertEqual(screen.session.listeners, [])
+
+
+    def test_new_game_flow(self):
+        self.window.home.new_game_button.click()
+        self.assertEqual(self.window.navigator.current(), 'new_game')
+        screen = self.window.new_game
+        screen.opponent.buttons['friend'].click()
+        self.assertFalse(screen.level_card.isVisibleTo(screen))
+        screen.opponent.buttons['computer'].click()
+        self.assertTrue(screen.level_card.isVisibleTo(screen))
+        screen.level.buttons['hard'].click()
+        screen.color.buttons['black'].click()
+        self.assertEqual(screen.white_name.text(), 'Computer, Hard')
+        self.assertEqual(screen.black_name.text(), 'You')
+        screen.start_button.click()
+        self.assertEqual(self.window.navigator.current(), 'game')
+        game = self.window.navigator.screens['game']
+        self.assertEqual(game.computer_levels, {1: 'hard'})
+
+    def test_back_from_new_game(self):
+        self.window.home.new_game_button.click()
+        self.window.new_game.back_button.click()
+        self.assertEqual(self.window.navigator.current(), 'home')
+
+    def test_rematch_and_new_game_from_the_result(self):
+        from game.config import GameConfig
+        self.window.step_delay_ms = 0
+        self.window.start_game(GameConfig('friend'))
+        first = self.window.navigator.screens['game']
+        first.resign(1)
+        first.show_result()
+        self.assertTrue(first.result_overlay.isVisible())
+        first.result_overlay.rematch_button.click()
+        second = self.window.navigator.screens['game']
+        self.assertIsNot(first, second)
+        self.assertEqual(self.window.navigator.current(), 'game')
+        second.resign(1)
+        second.show_result()
+        second.result_overlay.new_game_button.click()
+        self.assertEqual(self.window.navigator.current(), 'new_game')
+        self.assertNotIn('game', self.window.navigator.screens)
+        self.window.new_game.back_button.click()
+        self.assertEqual(self.window.navigator.current(), 'home')
+
+
+class GameConfigTest(unittest.TestCase):
+    def test_computer_levels(self):
+        import random
+        from game.config import GameConfig
+        self.assertEqual(GameConfig('friend').computer_levels(), {})
+        self.assertEqual(GameConfig('computer', 'hard', 'white').computer_levels(), {-1: 'hard'})
+        self.assertEqual(GameConfig('computer', 'easy', 'black').computer_levels(), {1: 'easy'})
+        self.assertEqual(GameConfig('self_play', 'medium').computer_levels(), {1: 'medium', -1: 'medium'})
+        drawn = {tuple(GameConfig('computer', 'easy', 'random').computer_levels(random.Random(i)))
+                 for i in range(20)}
+        self.assertEqual(drawn, {(1,), (-1,)})
 
 
 class GameScreenTest(unittest.TestCase):
@@ -139,6 +197,83 @@ class GameScreenTest(unittest.TestCase):
         screen.on_board_click('point', 17)
         self.assertIsNone(screen.selected)
         self.assertEqual(screen.board.view.sources, set())
+        screen.shutdown()
+
+
+
+@unittest.skipIf(QApplication is None, 'PyQt6 is not installed')
+class OverlayTest(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.app = QApplication.instance() or QApplication([])
+
+    def setUp(self):
+        from ui.screens.game import GameScreen
+        self.screen = GameScreen({-1: 'easy'}, step_delay_ms=0)
+        self.screen.resize(1280, 800)
+        self.screen.show()
+        self.session = self.screen.session
+        self.session.start(opening=(5, 3))
+
+    def tearDown(self):
+        self.screen.shutdown()
+        self.screen.close()
+
+    def test_pause_freezes_the_game(self):
+        self.screen.open_pause()
+        self.assertTrue(self.screen.pause_overlay.isVisible())
+        self.assertTrue(self.screen.ai.paused)
+        self.screen.on_board_click('point', 17)
+        self.assertIsNone(self.screen.selected)
+        self.assertEqual(self.screen.board.view.sources, set())
+        self.screen.pause_overlay.resume_button.click()
+        self.assertFalse(self.screen.pause_overlay.isVisible())
+        self.assertFalse(self.screen.ai.paused)
+        self.screen.on_board_click('point', 17)
+        self.assertEqual(self.screen.selected, 17)
+
+    def test_escape_toggles_pause(self):
+        self.screen.toggle_pause()
+        self.assertTrue(self.screen.pause_overlay.isVisible())
+        self.screen.toggle_pause()
+        self.assertFalse(self.screen.pause_overlay.isVisible())
+
+    def test_resign_shows_the_loss(self):
+        self.screen.open_pause()
+        self.screen.resign(self.screen.resigning_player())
+        self.assertFalse(self.screen.pause_overlay.isVisible())
+        self.screen.show_result()
+        self.assertTrue(self.screen.result_overlay.isVisible())
+        title, won, subtitle, tiles = self.screen.result_summary()
+        self.assertEqual(title, 'You lost')
+        self.assertFalse(won)
+        self.assertIn('by resignation', subtitle)
+        self.assertIn('on Easy', subtitle)
+
+    def test_win_summary(self):
+        board = [[0, 0] for _ in range(26)]
+        board[0], board[25] = [0, 1], [0, -1]
+        board[24] = [1, 1]
+        board[5] = [3, -1]
+        from game.session import Phase
+        self.session.board, self.session.player, self.session.phase = board, 1, Phase.AWAIT_ROLL
+        self.session.roll([6, 3])
+        self.session.move(24, 6)
+        title, won, subtitle, tiles = self.screen.result_summary()
+        self.assertEqual((title, won), ('You won', True))
+        self.assertEqual(tiles[2], (15, 'computer pips left'))
+
+    def test_main_menu_leaves(self):
+        left = []
+        self.screen.leave.connect(lambda: left.append(True))
+        self.screen.open_pause()
+        self.screen.pause_overlay.menu_button.click()
+        self.assertEqual(left, [True])
+
+    def test_no_resign_between_computers(self):
+        from ui.screens.game import GameScreen
+        screen = GameScreen({1: 'easy', -1: 'easy'}, step_delay_ms=0)
+        self.assertTrue(screen.pause_overlay.resign_button.isHidden())
         screen.shutdown()
 
 

@@ -9,8 +9,12 @@ pip install -r requirements.txt
 python main.py
 ```
 
-The game opens on the home screen. New game asks for the mode: two players, against the computer
-(choose its color and level) or computer against computer.
+The game opens on the home screen. New game chooses the opponent (the computer at easy, medium or hard,
+or a friend on this computer) and your color (white, black or random).
+
+During a game the menu button or Escape opens the pause menu: resume, restart with the same setup, resign,
+or go back to the main menu (which ends the game). When the game ends, the result shows over the board with
+a short summary and Rematch, New game or Main menu.
 
 The look follows the Midnight Felt design system in `DESIGN.md`; `ui/theme.py` holds the same tokens and
 a test keeps the two in sync. The Outfit and Inter fonts are bundled in `assets/fonts` under the SIL Open Font License.
@@ -30,6 +34,7 @@ with both dice. After that each turn is:
 ## Code
 
 - `rules.py`: the rules as pure functions over a board
+- `game/config.py`: the setup chosen on the New game screen
 - `game/session.py`: one game as a turn state machine (opening roll, roll, move, undo, end turn, resign),
   no gui; listeners get every change as an event
 - `ui/`: the PyQt window, the screens, the board widget (`ui/board`) and the theme
