@@ -5,6 +5,7 @@ from unittest import mock
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
+import rules  # noqa: E402
 from backgammon import backgammon  # noqa: E402
 
 
@@ -48,23 +49,23 @@ class BackgammonTest(unittest.TestCase):
         self.game.board = board
         self.game.current_player = player
         self.game.dice = list(dice)
-        self.game.moves = self.game.possible_moves(board, player, self.game.dice)
+        self.game.moves = rules.possible_moves(board, player, self.game.dice)
 
     def test_initial_board_has_15_checkers_each(self):
-        board = self.game.init_board()
+        board = rules.init_board()
         self.assertEqual(sum(c[0] for c in board if c[1] == 1), 15)
         self.assertEqual(sum(c[0] for c in board if c[1] == -1), 15)
 
     def test_eaten_checker_must_enter_first(self):
-        board = self.game.init_board()
+        board = rules.init_board()
         board[0] = [1, 1]
         board[1] = [1, 1]
-        moves = self.game.possible_moves(board, 1, [3, 5])
+        moves = rules.possible_moves(board, 1, [3, 5])
         self.assertTrue(all(position == 0 for position, _ in moves))
 
     def test_empty_bar_is_not_a_source(self):
-        board = self.game.init_board()
-        self.assertFalse(self.game.check_move(board, 1, 0, 3))
+        board = rules.init_board()
+        self.assertFalse(rules.check_move(board, 1, 0, 3))
 
     def test_hit_sends_checker_to_bar(self):
         board = empty_board()
@@ -81,38 +82,38 @@ class BackgammonTest(unittest.TestCase):
         board = empty_board()
         board[1] = [2, 1]
         board[4] = [2, -1]
-        self.assertFalse(self.game.check_move(board, 1, 1, 3))
+        self.assertFalse(rules.check_move(board, 1, 1, 3))
 
     def test_bear_off_with_higher_die_only_from_highest_point(self):
         board = empty_board()
         board[19] = [1, 1]
         board[23] = [1, 1]
         # 23 needs a 2 to bear off, a 5 can not be used while 19 is occupied
-        self.assertFalse(self.game.check_move(board, 1, 23, 5))
-        self.assertTrue(self.game.check_move(board, 1, 19, 5))
-        self.assertTrue(self.game.check_move(board, 1, 19, 6))
-        self.assertTrue(self.game.check_move(board, 1, 23, 2))
+        self.assertFalse(rules.check_move(board, 1, 23, 5))
+        self.assertTrue(rules.check_move(board, 1, 19, 5))
+        self.assertTrue(rules.check_move(board, 1, 19, 6))
+        self.assertTrue(rules.check_move(board, 1, 23, 2))
 
     def test_black_bear_off_with_higher_die(self):
         board = empty_board()
         board[6] = [1, -1]
         board[2] = [1, -1]
-        self.assertFalse(self.game.check_move(board, -1, 2, 5))
-        self.assertTrue(self.game.check_move(board, -1, 6, 6))
-        self.assertTrue(self.game.check_move(board, -1, 2, 2))
+        self.assertFalse(rules.check_move(board, -1, 2, 5))
+        self.assertTrue(rules.check_move(board, -1, 6, 6))
+        self.assertTrue(rules.check_move(board, -1, 2, 2))
 
     def test_no_bear_off_with_checker_outside_home(self):
         board = empty_board()
         board[18] = [1, 1]
         board[24] = [1, 1]
-        self.assertFalse(self.game.check_move(board, 1, 24, 1))
+        self.assertFalse(rules.check_move(board, 1, 24, 1))
 
     def test_must_use_both_dice_when_possible(self):
         board = empty_board()
         board[1] = [1, 1]
         board[24] = [2, -1]
         board[8] = [2, -1]
-        moves = self.game.possible_moves(board, 1, [1, 6])
+        moves = rules.possible_moves(board, 1, [1, 6])
         # 1 -> 7 then 7 -> 8 is blocked, 1 -> 2 then 2 -> 8 is blocked, so only one die is usable
         # and it must be the higher one
         self.assertEqual(moves, [(1, 6)])
@@ -123,7 +124,7 @@ class BackgammonTest(unittest.TestCase):
         board[24] = [2, -1]
         board[7] = [2, -1]
         # 1 -> 7 is blocked, 1 -> 2 then 2 -> 8 uses both dice
-        moves = self.game.possible_moves(board, 1, [1, 6])
+        moves = rules.possible_moves(board, 1, [1, 6])
         self.assertEqual(moves, [(1, 1)])
 
     def test_turn_passes_when_no_moves(self):
@@ -142,7 +143,7 @@ class BackgammonTest(unittest.TestCase):
         self.assertEqual(self.controller.events[-1], ('new_turn', -1))
 
     def test_turn_ends_after_dice_used(self):
-        board = self.game.init_board()
+        board = rules.init_board()
         self.set_state(board, 1, [3, 5])
         with mock.patch.object(self.game, 'roll_dice', return_value=[1, 2]):
             self.assertTrue(self.game.make_move(1, 3))
@@ -152,7 +153,7 @@ class BackgammonTest(unittest.TestCase):
         self.assertEqual(self.controller.events[-1], ('new_turn', -1))
 
     def test_invalid_move_rejected(self):
-        board = self.game.init_board()
+        board = rules.init_board()
         self.set_state(board, 1, [3, 5])
         self.assertFalse(self.game.make_move(1, 4))
         self.assertFalse(self.game.make_move(6, 3))
