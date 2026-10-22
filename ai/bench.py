@@ -1,7 +1,7 @@
 """Plays games between two computer players without the gui.
 
 Usage: python -m ai.bench [games] [white level] [black level]
-levels: random, easy, medium, hard
+players: random, easy, medium, hard, or td:<level> to use the trained network at that level
 """
 import math
 import random
@@ -13,8 +13,15 @@ from ai.player import ComputerPlayer, RandomPlayer
 
 
 def make_player(name, seed):
+    """random, a level (easy, medium, hard), or td:<level> for a level that uses the trained network"""
     if name == 'random':
         return RandomPlayer(random.Random(seed))
+    if name.startswith('td:'):
+        from ai.td import TDEvaluator
+        evaluator = TDEvaluator.load()
+        if evaluator is None:
+            raise SystemExit('no trained network, run python -m ai.train_td first')
+        return ComputerPlayer(name[3:], evaluator=evaluator, rng=random.Random(seed))
     return ComputerPlayer(name, rng=random.Random(seed))
 
 
