@@ -1,2 +1,2 @@
 PyQt6
-numpy  # only for training and using the TD network in ai/td.py
+numpy  # the hard level and training use the network in ai/td.py

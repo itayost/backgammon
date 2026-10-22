@@ -1,6 +1,6 @@
 """Plays games between two computer players without the gui.
 
-Usage: python -m ai.bench [games] [white level] [black level]
+Usage: python -m ai.bench [games] [white player] [black player] [seed]
 players: random, easy, medium, hard, or td:<level> to use the trained network at that level
 """
 import math
@@ -59,6 +59,7 @@ if __name__ == '__main__':
     n = int(sys.argv[1]) if len(sys.argv) > 1 else 100
     white_name = sys.argv[2] if len(sys.argv) > 2 else 'medium'
     black_name = sys.argv[3] if len(sys.argv) > 3 else 'random'
-    win_rate, margin, seconds = bench(n, white_name, black_name)
+    seed = int(sys.argv[4]) if len(sys.argv) > 4 else 0
+    win_rate, margin, seconds = bench(n, white_name, black_name, seed)
     print(f'{white_name} (white) vs {black_name} (black): white won {win_rate:.0%} +- {margin:.0%} '
           f'of {n} games in {seconds:.0f}s')

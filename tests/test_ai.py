@@ -125,6 +125,22 @@ class SearchTest(unittest.TestCase):
                 board = rng.choice(full_moves(board, -player, rules.roll_dice()))[0]
 
 
+class LevelTest(unittest.TestCase):
+    def test_hard_uses_the_trained_network(self):
+        from ai.td import TDEvaluator
+        self.assertIsInstance(ComputerPlayer('hard').evaluator, TDEvaluator)
+
+    def test_falls_back_without_the_network(self):
+        from unittest import mock
+        with mock.patch('ai.td.TDEvaluator.load', return_value=None):
+            self.assertIsInstance(ComputerPlayer('hard').evaluator, HeuristicEvaluator)
+
+    def test_network_scores_are_probabilities(self):
+        from ai.td import TDEvaluator
+        values = TDEvaluator.load().evaluate([rules.init_board()], 1)
+        self.assertTrue(0 <= values[0] <= 1)
+
+
 class StrengthTest(unittest.TestCase):
     def test_medium_beats_random(self):
         rate, _, _ = bench(30, 'medium', 'random', seed=7)

@@ -25,12 +25,23 @@ The code is in `ai/`:
   and stops at a time limit
 - `ai_controller.py` plays for the computer in the gui, thinking in a background thread
 
-Levels: easy (1-ply with some randomness), medium (1-ply), hard (2-ply, up to 2.5 seconds).
+Levels:
+
+- easy: 1-ply with the hand written evaluation and some randomness
+- medium: 1-ply with the hand written evaluation
+- hard: 2-ply with the trained network in `ai/weights/td.npz`, up to 2.5 seconds per move
+
+The network is a TD-Gammon style network trained by playing against itself:
+
+```
+python -m ai.train_td 20000
+```
 
 Compare players without the gui:
 
 ```
 python -m ai.bench 200 hard medium
+python -m ai.bench 200 td:medium medium   # td:<level> runs a level with the network
 ```
 
 ## Tests
