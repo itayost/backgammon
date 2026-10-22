@@ -3,7 +3,7 @@ from PyQt6.QtWidgets import QMainWindow, QDialog
 from ui.navigator import Navigator
 from ui.screens.home import HomeScreen
 from ui.screens.how_to import HowToScreen
-from ui.screens.legacy_game import LegacyGameScreen
+from ui.screens.game import GameScreen
 
 
 class AppWindow(QMainWindow):
@@ -35,12 +35,13 @@ class AppWindow(QMainWindow):
         if dialog.exec() == QDialog.DialogCode.Accepted.value:
             self.start_game(dialog.computer_levels())
 
-    def start_game(self, computer_levels):
+    def start_game(self, computer_levels, step_delay_ms=500):
         self.end_game()
-        screen = LegacyGameScreen(computer_levels)
+        screen = GameScreen(computer_levels, step_delay_ms=step_delay_ms)
         screen.leave.connect(self.leave_game)
         self.navigator.add_screen('game', screen)
         self.navigator.go('game')
+        screen.start()
 
     def leave_game(self):
         self.end_game()

@@ -15,8 +15,25 @@ The game opens on the home screen. New game asks for the mode: two players, agai
 The look follows the Midnight Felt design system in `DESIGN.md`; `ui/theme.py` holds the same tokens and
 a test keeps the two in sync. The Outfit and Inter fonts are bundled in `assets/fonts` under the SIL Open Font License.
 
-Click a highlighted checker to select it, then click a highlighted point to move it.
-When a checker can be borne off, the brown area on the right is highlighted.
+## Playing
+
+The first player is decided by an opening roll: each side rolls one die and the higher one moves first
+with both dice. After that each turn is:
+
+1. Roll dice (R or Space).
+2. Click a highlighted checker, then a highlighted point. To bear off, click the Off tray on the right.
+   Click the checker again to cancel.
+3. Undo (Ctrl+Z or U) takes back moves until the turn ends.
+4. Done (Enter or D) ends the turn once every die that can be played is used. When no move is possible
+   the board says so and Done passes the turn.
+
+## Code
+
+- `rules.py`: the rules as pure functions over a board
+- `game/session.py`: one game as a turn state machine (opening roll, roll, move, undo, end turn, resign),
+  no gui; listeners get every change as an event
+- `ui/`: the PyQt window, the screens, the board widget (`ui/board`) and the theme
+- `ai/`: the computer player
 
 ## Computer player
 
@@ -26,7 +43,8 @@ The code is in `ai/`:
 - `evaluators.py` estimates the chance of winning from a position
 - `search.py` picks the move: 1-ply evaluates every move, 2-ply also averages over all the opponent rolls
   and stops at a time limit
-- `ai_controller.py` plays for the computer in the gui, thinking in a background thread
+- `ai_controller.py` plays for the computer through the game session: it rolls, thinks in a background thread,
+  plays the steps one by one and ends the turn
 
 Levels:
 

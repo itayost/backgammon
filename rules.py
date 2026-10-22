@@ -25,8 +25,13 @@ def copy_board(board):
 
 
 def roll_dice():
-    die1 = random.randint(1, 6)
-    die2 = random.randint(1, 6)
+    return roll_dice_with(random)
+
+
+def roll_dice_with(rng):
+    """Rolls two dice with any object that has randint, doubles give four moves"""
+    die1 = rng.randint(1, 6)
+    die2 = rng.randint(1, 6)
     if die1 == die2:
         return [die1, die1, die1, die1]
     return [die1, die2]

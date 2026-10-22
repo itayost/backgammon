@@ -103,6 +103,21 @@ QFrame[role="card"] {{
     border: 1px solid {c['line']};
     border-radius: {RADIUS['lg']}px;
 }}
+QFrame[role="player"] {{
+    background: {c['surface']};
+    border: 2px solid {c['line']};
+    border-radius: {RADIUS['lg']}px;
+}}
+QFrame[role="player"][active="true"] {{ border-color: {c['accent']}; }}
+QLabel[role="tag"] {{
+    background: {c['accent']};
+    color: {c['accent-ink']};
+    border-radius: 10px;
+    padding: 3px 10px;
+    {font_css(BODY_FONT, 600)}
+    font-size: 12px;
+    letter-spacing: 1px;
+}}
 QFrame[role="divider"] {{
     background: {c['line']};
     border: 0;

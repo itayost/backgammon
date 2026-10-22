@@ -52,19 +52,94 @@ class AppWindowTest(unittest.TestCase):
         self.assertEqual(self.window.navigator.current(), 'home')
 
     def test_game_starts_and_leaves_cleanly(self):
-        self.window.start_game({1: 'medium', -1: 'easy'})
+        self.window.start_game({1: 'medium', -1: 'easy'}, step_delay_ms=0)
         self.assertEqual(self.window.navigator.current(), 'game')
         screen = self.window.navigator.screens['game']
         self.window.leave_game()
         self.assertEqual(self.window.navigator.current(), 'home')
         self.assertNotIn('game', self.window.navigator.screens)
-        self.assertEqual(screen.model.list_of_controllers, [])
+        self.assertEqual(screen.session.listeners, [])
 
-    def test_declining_another_game_returns_home(self):
-        self.window.start_game({})
-        board = self.window.navigator.screens['game'].board
-        board.on_quit()
-        self.assertEqual(self.window.navigator.current(), 'home')
+
+class GameScreenTest(unittest.TestCase):
+    """Clicks on the board and the turn buttons, two players on one computer"""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.app = QApplication.instance() or QApplication([])
+
+    def setUp(self):
+        from ui.screens.game import GameScreen
+        self.screen = GameScreen({})
+        self.session = self.screen.session
+        self.session.start(opening=(5, 3))
+
+    def tearDown(self):
+        self.screen.shutdown()
+
+    def test_select_then_move(self):
+        self.screen.on_board_click('point', 17)
+        self.assertEqual(self.screen.selected, 17)
+        self.assertEqual(self.screen.board.view.targets, {20, 22})
+        self.screen.on_board_click('point', 22)
+        self.assertEqual(self.session.board[22], [1, 1])
+        self.assertIsNone(self.screen.selected)
+        self.assertEqual(self.session.dice_left, [3])
+
+    def test_click_selected_again_cancels(self):
+        self.screen.on_board_click('point', 17)
+        self.screen.on_board_click('point', 17)
+        self.assertIsNone(self.screen.selected)
+
+    def test_click_another_source_switches(self):
+        self.screen.on_board_click('point', 17)
+        self.screen.on_board_click('point', 12)
+        self.assertEqual(self.screen.selected, 12)
+
+    def test_buttons_follow_the_turn(self):
+        self.assertFalse(self.screen.roll_button.isVisibleTo(self.screen))
+        self.assertFalse(self.screen.undo_button.isEnabled())
+        self.assertFalse(self.screen.done_button.isEnabled())
+        self.screen.on_board_click('point', 17)
+        self.screen.on_board_click('point', 22)
+        self.assertTrue(self.screen.undo_button.isEnabled())
+        self.screen.on_board_click('point', 19)
+        self.screen.on_board_click('point', 22)
+        self.assertTrue(self.screen.done_button.isEnabled())
+        self.screen.undo_button.click()
+        self.assertFalse(self.screen.done_button.isEnabled())
+        self.screen.on_board_click('point', 19)
+        self.screen.on_board_click('point', 22)
+        self.screen.done_button.click()
+        self.assertEqual(self.session.player, -1)
+        self.assertTrue(self.screen.roll_button.isVisibleTo(self.screen))
+        self.screen.roll_button.click()
+        self.assertFalse(self.screen.roll_button.isVisibleTo(self.screen))
+
+    def test_bear_off_through_the_tray(self):
+        board = [[0, 0] for _ in range(26)]
+        board[0], board[25] = [0, 1], [0, -1]
+        board[22] = [2, 1]
+        board[3] = [2, -1]
+        self.session.board = board
+        self.session.player = 1
+        from game.session import Phase
+        self.session.phase = Phase.AWAIT_ROLL
+        self.session.roll([6, 2])
+        self.screen.on_board_click('point', 22)
+        self.assertTrue(self.screen.board.view.tray_target)
+        self.screen.on_board_click('tray', None)
+        self.assertEqual(self.session.board[22], [1, 1])
+        self.assertEqual(self.session.dice_left, [2])
+
+    def test_computer_turn_ignores_clicks(self):
+        from ui.screens.game import GameScreen
+        screen = GameScreen({1: 'easy'}, step_delay_ms=0)
+        screen.session.start(opening=(5, 3))
+        screen.on_board_click('point', 17)
+        self.assertIsNone(screen.selected)
+        self.assertEqual(screen.board.view.sources, set())
+        screen.shutdown()
 
 
 if __name__ == '__main__':
