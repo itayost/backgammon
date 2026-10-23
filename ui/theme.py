@@ -91,6 +91,7 @@ QLabel[role="display"] {{ {font_css(DISPLAY_FONT, 700)} font-size: 56px; }}
 QLabel[role="wordmark"] {{ {font_css(DISPLAY_FONT, 700)} font-size: 80px; }}
 QLabel[role="headline"] {{ {font_css(DISPLAY_FONT, 600)} font-size: 32px; }}
 QLabel[role="title"] {{ {font_css(DISPLAY_FONT, 600)} font-size: 22px; }}
+QLabel[role="big-number"] {{ {font_css(DISPLAY_FONT, 600)} font-size: 44px; }}
 QLabel[role="number"] {{ {font_css(DISPLAY_FONT, 600)} font-size: 28px; }}
 QLabel[role="lead"] {{ font-size: 18px; color: {c['text-muted']}; }}
 QLabel[role="label"] {{ {font_css(BODY_FONT, 500)} font-size: 14px; }}
@@ -241,6 +242,15 @@ QPushButton[variant="choice"]:checked {{
 QPushButton[variant="choice"]:focus {{ border-color: {c['text']}; }}
 QPushButton[variant="choice"]:checked:focus {{ border-color: {c['accent-hover']}; }}
 QLabel[role="choice-title"] {{ {font_css(BODY_FONT, 600)} font-size: 16px; background: transparent; }}
+QPushButton[variant="switch"] {{
+    min-height: 30px;
+    max-height: 30px;
+    min-width: 52px;
+    max-width: 52px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+}}
 QPushButton:focus {{ border-color: {c['accent']}; }}
 QPushButton:disabled {{
     background: {c['surface-2']};

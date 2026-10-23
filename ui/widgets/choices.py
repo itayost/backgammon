@@ -129,3 +129,32 @@ class ChoiceGroup(QWidget):
         for option, b in self.buttons.items():
             if b.isChecked():
                 return option
+
+
+class Switch(QPushButton):
+    """An on and off switch: an amber pill with the knob on the right when on"""
+
+    def __init__(self, accessible_name, checked=False, parent=None):
+        super().__init__(parent)
+        self.setCheckable(True)
+        self.setChecked(checked)
+        self.setFixedSize(52, 30)
+        self.setProperty('variant', 'switch')
+        self.setAccessibleName(accessible_name)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+
+    def paintEvent(self, event):
+        p = QPainter(self)
+        p.setRenderHint(QPainter.RenderHint.Antialiasing)
+        on = self.isChecked()
+        if self.hasFocus():
+            p.setPen(QPen(QColor(theme.color('text') if on else theme.color('accent')), 2))
+        else:
+            p.setPen(Qt.PenStyle.NoPen)
+        p.setBrush(QColor(theme.color('accent' if on else 'line')))
+        p.drawRoundedRect(self.rect().adjusted(1, 1, -1, -1), 14, 14)
+        p.setPen(Qt.PenStyle.NoPen)
+        p.setBrush(QColor(theme.color('accent-ink' if on else 'text-muted')))
+        knob_x = self.width() - 15 if on else 15
+        p.drawEllipse(QPointF(knob_x, self.height() / 2), 12, 12)
+        p.end()

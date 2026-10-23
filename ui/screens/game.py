@@ -92,13 +92,18 @@ class GameScreen(QWidget):
     leave = pyqtSignal()
     rematch = pyqtSignal()
     new_game = pyqtSignal()
+    open_settings = pyqtSignal()
 
-    def __init__(self, computer_levels, config=None, step_delay_ms=500, session=None, parent=None):
+    def __init__(self, computer_levels, config=None, step_delay_ms=500, session=None, show_hints=True,
+                 stats=None, parent=None):
         super().__init__(parent)
         self.setObjectName('screen')
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self.computer_levels = dict(computer_levels)
         self.config = config or config_for(self.computer_levels)
+        self.show_hints = show_hints
+        self.stats = stats
+        self.recorded = False
         self.session = session or GameSession()
         self.selected = None
 
@@ -182,6 +187,7 @@ class GameScreen(QWidget):
             if against_computer else 'Leaving ends this game.')
         self.pause_overlay.resume.connect(self.close_pause)
         self.pause_overlay.restart.connect(self.rematch)
+        self.pause_overlay.settings.connect(self.open_settings)
         self.pause_overlay.resign.connect(self.confirm_resign)
         self.pause_overlay.main_menu.connect(self.leave)
         self.result_overlay = GameOverOverlay(self)
@@ -327,13 +333,50 @@ class GameScreen(QWidget):
             self.selected = None
         self.refresh()
         if event == 'game_over':
+            self.record_result(finished=True)
             # Leave the final position on screen for a moment before the result
             QTimer.singleShot(0 if self.session.stats.resigned else 700, self.show_result)
 
     def show_result(self):
         if self.session.phase != Phase.GAME_OVER or self.result_overlay.isVisible():
             return
-        self.result_overlay.show_result(*self.result_summary())
+        self.result_overlay.show_result(*self.result_summary(), record=self.record_text())
+
+    # Statistics
+
+    def single_human(self):
+        humans = [p for p in (1, -1) if self.is_human(p)]
+        return humans[0] if len(humans) == 1 else None
+
+    def record_result(self, finished):
+        """Counts the game once: against the computer a win or a loss (leaving early is a loss),
+        between friends only a finished game"""
+        if self.recorded or self.stats is None:
+            return
+        human = self.single_human()
+        if human is not None:
+            self.recorded = True
+            won = finished and self.session.stats.winner == human
+            self.stats.record_computer_game(self.computer_levels[-human], won)
+        elif finished and not self.computer_levels:
+            self.recorded = True
+            self.stats.record_friend_game()
+
+    def record_text(self):
+        human = self.single_human()
+        if self.stats is None or human is None:
+            return ''
+        level = self.computer_levels[-human]
+        entry = self.stats.level(level)
+        wins = f"{entry['wins']} win{'s' if entry['wins'] != 1 else ''}"
+        losses = f"{entry['losses']} loss{'es' if entry['losses'] != 1 else ''}"
+        return f'Your record against {level.capitalize()} is now {wins} and {losses}.'
+
+    def apply_settings(self, show_hints, step_delay_ms):
+        self.show_hints = show_hints
+        if self.ai is not None:
+            self.ai.step_delay_ms = step_delay_ms
+        self.refresh()
 
     def result_summary(self):
         """(title, won, subtitle, tiles) for the game over overlay"""
@@ -360,6 +403,10 @@ class GameScreen(QWidget):
         return title, won, subtitle, tiles
 
     def shutdown(self):
+        # Leaving an unfinished game against the computer counts as a loss; a session that never
+        # started is also in GAME_OVER, so it is not counted
+        if self.session.phase != Phase.GAME_OVER:
+            self.record_result(finished=False)
         if self.ai is not None:
             self.ai.stop()
         self.session.remove_listener(self.on_event)
@@ -381,10 +428,11 @@ class GameScreen(QWidget):
         session = self.session
         human = self.human_turn()
         moving = human and session.phase == Phase.MOVING
-        sources = {start for start, _ in session.legal} if moving else set()
+        hints = moving and self.show_hints
+        sources = {start for start, _ in session.legal} if hints else set()
         selected = self.selected if moving else None
-        targets = self.targets() if moving else set()
-        tray = moving and selected is not None and any(
+        targets = self.targets() if hints else set()
+        tray = hints and selected is not None and any(
             start == selected and session.destination(start, jump) is None for start, jump in session.legal)
         self.board.set_view(BoardView(board=[cell[:] for cell in session.board], dice=self.dice_view(),
                                       sources=sources, selected=selected, targets=targets,

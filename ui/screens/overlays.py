@@ -8,6 +8,7 @@ from ui.widgets.overlay import Overlay
 class PauseOverlay(Overlay):
     resume = pyqtSignal()
     restart = pyqtSignal()
+    settings = pyqtSignal()
     resign = pyqtSignal()
     main_menu = pyqtSignal()
 
@@ -18,10 +19,12 @@ class PauseOverlay(Overlay):
         self.body.addSpacing(8)
         self.resume_button = button('Resume', 'primary', 52)
         self.restart_button = button('Restart with the same setup', 'secondary', 52)
+        self.settings_button = button('Settings', 'secondary', 52)
         self.resign_button = button('Resign', 'danger', 52)
         self.menu_button = button('Main menu', 'ghost', 48)
         self.body.addWidget(self.resume_button)
         self.body.addWidget(self.restart_button)
+        self.body.addWidget(self.settings_button)
         self.body.addWidget(self.resign_button)
         self.resign_button.setVisible(can_resign)
         self.body.addSpacing(4)
@@ -35,6 +38,7 @@ class PauseOverlay(Overlay):
 
         self.resume_button.clicked.connect(self.resume)
         self.restart_button.clicked.connect(self.restart)
+        self.settings_button.clicked.connect(self.settings)
         self.resign_button.clicked.connect(self.resign)
         self.menu_button.clicked.connect(self.main_menu)
 
@@ -80,6 +84,9 @@ class GameOverOverlay(Overlay):
             tiles.addWidget(tile)
             self.tiles.append((value, caption))
         self.body.addLayout(tiles)
+        self.record = label('', 'muted', wrap=True)
+        self.record.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.body.addWidget(self.record)
 
         self.rematch_button = button('Rematch', 'primary', 56)
         self.new_game_button = button('New game', 'secondary', 52)
@@ -95,8 +102,10 @@ class GameOverOverlay(Overlay):
         self.new_game_button.clicked.connect(self.new_game)
         self.menu_button.clicked.connect(self.main_menu)
 
-    def show_result(self, title, won, subtitle, tiles):
-        """tiles: three (value, caption) pairs"""
+    def show_result(self, title, won, subtitle, tiles, record=''):
+        """tiles: three (value, caption) pairs, record: the line about the player's record"""
+        self.record.setText(record)
+        self.record.setVisible(bool(record))
         self.title.setText(title)
         self.title.setProperty('role', 'result-win' if won else 'result')
         self.title.style().unpolish(self.title)

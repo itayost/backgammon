@@ -16,11 +16,12 @@ class NewGameScreen(QWidget):
     back = pyqtSignal()
     start = pyqtSignal(object)  # GameConfig
 
-    def __init__(self, config=None, parent=None):
+    def __init__(self, settings=None, parent=None):
         super().__init__(parent)
         self.setObjectName('screen')
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
-        self.config = config or GameConfig()
+        self.settings = settings
+        self.config = self.saved_config()
 
         root = QVBoxLayout(self)
         root.setContentsMargins(96, 40, 96, 40)
@@ -87,8 +88,8 @@ class NewGameScreen(QWidget):
         summary_layout.addLayout(rows)
         self.start_button = button('Start game', 'primary', 56)
         summary_layout.addWidget(self.start_button)
-        summary_layout.addWidget(label('Each side rolls one die; the higher die moves first with both dice.',
-                                       'muted', wrap=True))
+        summary_layout.addWidget(label('Each side rolls one die; the higher die moves first with both dice. '
+                                       'These choices are remembered for next time.', 'muted', wrap=True))
         summary_column = QVBoxLayout()
         summary_column.addWidget(summary)
         summary_column.addStretch(1)
@@ -99,8 +100,30 @@ class NewGameScreen(QWidget):
         self.level.changed.connect(lambda value: self.update_config(level=value))
         self.color.changed.connect(lambda value: self.update_config(color=value))
         self.back_button.clicked.connect(self.back)
-        self.start_button.clicked.connect(lambda: self.start.emit(self.current_config()))
+        self.start_button.clicked.connect(self.start_game)
         self.refresh()
+
+    def saved_config(self):
+        if self.settings is None:
+            return GameConfig()
+        return GameConfig(self.settings.get('default_opponent'), self.settings.get('default_level'),
+                          self.settings.get('default_color'))
+
+    def load(self):
+        """Shows the remembered choices, called whenever the screen opens"""
+        self.config = self.saved_config()
+        self.opponent.set_value(self.config.opponent)
+        self.level.set_value(self.config.level)
+        self.color.set_value(self.config.color)
+        self.refresh()
+
+    def start_game(self):
+        config = self.current_config()
+        if self.settings is not None:
+            self.settings.set('default_opponent', config.opponent)
+            self.settings.set('default_level', config.level)
+            self.settings.set('default_color', config.color)
+        self.start.emit(config)
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key.Key_Escape:
