@@ -103,7 +103,9 @@ class BoardArt(QWidget):
 
 class HomeScreen(QWidget):
     new_game = pyqtSignal()
+    statistics = pyqtSignal()
     how_to = pyqtSignal()
+    settings = pyqtSignal()
     quit = pyqtSignal()
 
     def __init__(self, parent=None):
@@ -128,9 +130,12 @@ class HomeScreen(QWidget):
         menu = QVBoxLayout()
         menu.setSpacing(12)
         self.new_game_button = button('New game', 'primary', 56)
+        self.statistics_button = button('Statistics', 'secondary', 52)
         self.how_to_button = button('How to play', 'secondary', 52)
+        self.settings_button = button('Settings', 'secondary', 52)
         self.quit_button = button('Quit', 'ghost', 48)
-        for b in (self.new_game_button, self.how_to_button, self.quit_button):
+        for b in (self.new_game_button, self.statistics_button, self.how_to_button, self.settings_button,
+                  self.quit_button):
             b.setFixedWidth(320)
             menu.addWidget(b)
         left.addLayout(menu)
@@ -142,6 +147,8 @@ class HomeScreen(QWidget):
         layout.addWidget(self.art, 1)
 
         self.new_game_button.clicked.connect(self.new_game)
+        self.statistics_button.clicked.connect(self.statistics)
         self.how_to_button.clicked.connect(self.how_to)
+        self.settings_button.clicked.connect(self.settings)
         self.quit_button.clicked.connect(self.quit)
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)

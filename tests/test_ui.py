@@ -14,6 +14,19 @@ except ImportError:
     QApplication = None
 
 
+def make_window():
+    """An app window with settings and statistics in a temporary folder"""
+    import tempfile
+    from PyQt6.QtCore import QSettings
+    from stores.settings_store import SettingsStore
+    from stores.stats_store import StatsStore
+    from ui.app_window import AppWindow
+    folder = tempfile.TemporaryDirectory()
+    settings = SettingsStore(QSettings(os.path.join(folder.name, 'settings.ini'), QSettings.Format.IniFormat))
+    stats = StatsStore(os.path.join(folder.name, 'stats.json'))
+    return AppWindow(settings, stats), folder
+
+
 @unittest.skipIf(QApplication is None, 'PyQt6 is not installed')
 class AppWindowTest(unittest.TestCase):
     @classmethod
@@ -25,12 +38,12 @@ class AppWindowTest(unittest.TestCase):
         cls.app.setStyleSheet(theme.stylesheet())
 
     def setUp(self):
-        from ui.app_window import AppWindow
-        self.window = AppWindow()
+        self.window, self.folder = make_window()
         self.window.show()
 
     def tearDown(self):
         self.window.close()
+        self.folder.cleanup()
 
     def test_fonts_are_bundled(self):
         from ui import theme
@@ -104,6 +117,96 @@ class AppWindowTest(unittest.TestCase):
         self.assertNotIn('game', self.window.navigator.screens)
         self.window.new_game.back_button.click()
         self.assertEqual(self.window.navigator.current(), 'home')
+
+
+    def test_statistics_and_settings_from_home(self):
+        self.window.home.statistics_button.click()
+        self.assertEqual(self.window.navigator.current(), 'stats')
+        self.window.stats_screen.back_button.click()
+        self.window.home.settings_button.click()
+        self.assertEqual(self.window.navigator.current(), 'settings')
+        self.window.settings_screen.back_button.click()
+        self.assertEqual(self.window.navigator.current(), 'home')
+
+    def test_new_game_remembers_choices(self):
+        self.window.home.new_game_button.click()
+        screen = self.window.new_game
+        screen.level.buttons['hard'].click()
+        screen.color.buttons['random'].click()
+        screen.start_button.click()
+        self.window.leave_game()
+        self.window.home.new_game_button.click()
+        self.assertEqual(screen.level.value(), 'hard')
+        self.assertEqual(screen.color.value(), 'random')
+        self.assertEqual(self.window.settings.get('default_level'), 'hard')
+
+    def test_leaving_a_computer_game_is_a_loss(self):
+        from game.config import GameConfig
+        self.window.step_delay_ms = 0
+        self.window.start_game(GameConfig('computer', 'easy', 'white'))
+        self.window.leave_game()
+        self.assertEqual(self.window.stats.level('easy'), {'wins': 0, 'losses': 1, 'streak': -1})
+
+    def test_restart_counts_and_finished_game_is_counted_once(self):
+        from game.config import GameConfig
+        self.window.step_delay_ms = 0
+        self.window.start_game(GameConfig('computer', 'medium', 'white'))
+        game = self.window.navigator.screens['game']
+        game.open_pause()
+        game.pause_overlay.restart_button.click()
+        self.assertEqual(self.window.stats.level('medium')['losses'], 1)
+        game = self.window.navigator.screens['game']
+        game.resign(1)
+        game.show_result()
+        self.assertEqual(self.window.stats.level('medium')['losses'], 2)
+        self.assertIn('0 wins and 2 losses', game.result_overlay.record.text())
+        self.window.leave_game()
+        self.assertEqual(self.window.stats.level('medium')['losses'], 2)
+
+    def test_friend_games_count_when_finished(self):
+        from game.config import GameConfig
+        self.window.start_game(GameConfig('friend'))
+        self.window.leave_game()
+        self.assertEqual(self.window.stats.friend_games(), 0)
+        self.window.start_game(GameConfig('friend'))
+        self.window.navigator.screens['game'].resign(1)
+        self.assertEqual(self.window.stats.friend_games(), 1)
+
+    def test_settings_from_the_pause_menu_apply_to_the_game(self):
+        from game.config import GameConfig
+        self.window.start_game(GameConfig('friend'))
+        game = self.window.navigator.screens['game']
+        game.session.start(opening=(5, 3))
+        self.assertTrue(game.board.view.sources)
+        game.open_pause()
+        game.pause_overlay.settings_button.click()
+        self.assertEqual(self.window.navigator.current(), 'settings')
+        self.window.settings_screen.hints.click()
+        self.window.settings_screen.back_button.click()
+        self.assertEqual(self.window.navigator.current(), 'game')
+        game.close_pause()
+        self.assertEqual(game.board.view.sources, set())
+        game.on_board_click('point', 17)
+        game.on_board_click('point', 22)
+        self.assertEqual(game.session.board[22], [1, 1])
+
+    def test_speed_setting_reaches_the_computer(self):
+        from game.config import GameConfig
+        self.window.start_game(GameConfig('computer', 'easy', 'white'))
+        game = self.window.navigator.screens['game']
+        self.assertEqual(game.ai.step_delay_ms, 500)
+        self.window.settings.set('speed', 'slow')
+        self.assertEqual(game.ai.step_delay_ms, 900)
+
+    def test_statistics_screen_shows_the_record(self):
+        self.window.stats.record_computer_game('hard', True)
+        self.window.stats.record_computer_game('hard', False)
+        self.window.stats.record_computer_game('easy', True)
+        self.window.home.statistics_button.click()
+        screen = self.window.stats_screen
+        self.assertEqual([t.text() for t in screen.totals], ['3', '67%', '0'])
+        cells = screen.rows['hard']
+        self.assertEqual((cells[1].text(), cells[2].text(), cells[4].text(), cells[5].text()), ('1', '1', '50%', 'L1'))
 
 
 class GameConfigTest(unittest.TestCase):

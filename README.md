@@ -12,7 +12,12 @@ python main.py
 The game opens on the home screen. New game chooses the opponent (the computer at easy, medium or hard,
 or a friend on this computer) and your color (white, black or random).
 
-During a game the menu button or Escape opens the pause menu: resume, restart with the same setup, resign,
+Settings (show legal moves, computer move speed, default level and color) and the New game choices are saved
+with QSettings. Statistics (wins, losses, win rate and streak per level, and games with a friend) are saved
+in `stats.json` in the user's application data folder. Resigning or leaving a game against the computer counts
+as a loss.
+
+During a game the menu button or Escape opens the pause menu: resume, restart with the same setup, settings, resign,
 or go back to the main menu (which ends the game). When the game ends, the result shows over the board with
 a short summary and Rematch, New game or Main menu.
 
@@ -37,6 +42,7 @@ with both dice. After that each turn is:
 - `game/config.py`: the setup chosen on the New game screen
 - `game/session.py`: one game as a turn state machine (opening roll, roll, move, undo, end turn, resign),
   no gui; listeners get every change as an event
+- `stores/`: saved settings and statistics
 - `ui/`: the PyQt window, the screens, the board widget (`ui/board`) and the theme
 - `ai/`: the computer player
 
