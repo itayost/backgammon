@@ -103,6 +103,18 @@ QFrame[role="card"] {{
     border: 1px solid {c['line']};
     border-radius: {RADIUS['lg']}px;
 }}
+QFrame[role="dialog"] {{
+    background: {c['surface']};
+    border: 1px solid {c['line']};
+    border-radius: {RADIUS['lg']}px;
+}}
+QFrame[role="tile"] {{
+    background: {c['surface-2']};
+    border: 0;
+    border-radius: {RADIUS['md']}px;
+}}
+QLabel[role="result-win"] {{ {font_css(DISPLAY_FONT, 700)} font-size: 56px; color: {c['success']}; }}
+QLabel[role="result"] {{ {font_css(DISPLAY_FONT, 700)} font-size: 56px; }}
 QFrame[role="player"] {{
     background: {c['surface']};
     border: 2px solid {c['line']};
@@ -190,6 +202,45 @@ QPushButton[variant="icon"] {{
     border: 2px solid {c['line']};
 }}
 QPushButton[variant="icon"]:hover {{ background: #24373A; }}
+QFrame[role="segments"] {{
+    background: {c['bg']};
+    border: 1px solid {c['line']};
+    border-radius: {RADIUS['choice']}px;
+}}
+QPushButton[variant="segment"] {{
+    min-height: 40px;
+    padding: 0 20px;
+    border-radius: {RADIUS['segment']}px;
+    border: 2px solid transparent;
+    background: transparent;
+    color: {c['text-muted']};
+    {font_css(BODY_FONT, 500)}
+    font-size: 15px;
+}}
+QPushButton[variant="segment"]:hover {{ background: transparent; color: {c['text']}; }}
+QPushButton[variant="segment"]:checked {{
+    background: {c['accent']};
+    color: {c['accent-ink']};
+    {font_css(BODY_FONT, 600)}
+}}
+QPushButton[variant="segment"]:checked:focus {{ border-color: {c['text']}; }}
+QPushButton[variant="choice"] {{
+    min-height: 56px;
+    padding: 0;
+    text-align: left;
+    background: {c['surface']};
+    border: 2px solid {c['line']};
+    border-radius: {RADIUS['choice']}px;
+}}
+QPushButton[variant="choice"][tall="true"] {{ min-height: 84px; }}
+QPushButton[variant="choice"]:hover {{ background: {c['surface-2']}; }}
+QPushButton[variant="choice"]:checked {{
+    background: {c['surface-2']};
+    border-color: {c['accent']};
+}}
+QPushButton[variant="choice"]:focus {{ border-color: {c['text']}; }}
+QPushButton[variant="choice"]:checked:focus {{ border-color: {c['accent-hover']}; }}
+QLabel[role="choice-title"] {{ {font_css(BODY_FONT, 600)} font-size: 16px; background: transparent; }}
 QPushButton:focus {{ border-color: {c['accent']}; }}
 QPushButton:disabled {{
     background: {c['surface-2']};

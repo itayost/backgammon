@@ -1,9 +1,10 @@
-from PyQt6.QtWidgets import QMainWindow, QDialog
+from PyQt6.QtWidgets import QMainWindow
 
 from ui.navigator import Navigator
 from ui.screens.home import HomeScreen
 from ui.screens.how_to import HowToScreen
 from ui.screens.game import GameScreen
+from ui.screens.new_game import NewGameScreen
 
 
 class AppWindow(QMainWindow):
@@ -16,32 +17,42 @@ class AppWindow(QMainWindow):
         self.navigator = Navigator()
         self.setCentralWidget(self.navigator)
 
+        self.step_delay_ms = 500
         self.home = HomeScreen()
         self.how_to = HowToScreen()
+        self.new_game = NewGameScreen()
         self.navigator.add_screen('home', self.home)
         self.navigator.add_screen('how_to', self.how_to)
+        self.navigator.add_screen('new_game', self.new_game)
 
-        self.home.new_game.connect(self.ask_new_game)
+        self.home.new_game.connect(self.open_new_game)
         self.home.how_to.connect(lambda: self.navigator.go('how_to'))
         self.home.quit.connect(self.close)
         self.how_to.back.connect(self.navigator.back)
-        self.how_to.start.connect(self.ask_new_game)
+        self.how_to.start.connect(self.open_new_game)
+        self.new_game.back.connect(self.navigator.back)
+        self.new_game.start.connect(self.start_game)
 
         self.navigator.reset('home')
 
-    def ask_new_game(self):
-        from new_game_dialog import NewGameDialog
-        dialog = NewGameDialog(self)
-        if dialog.exec() == QDialog.DialogCode.Accepted.value:
-            self.start_game(dialog.computer_levels())
+    def open_new_game(self):
+        self.navigator.go('new_game')
 
-    def start_game(self, computer_levels, step_delay_ms=500):
+    def start_game(self, config):
+        """Starts a game for a GameConfig; a random color is drawn again for every game"""
         self.end_game()
-        screen = GameScreen(computer_levels, step_delay_ms=step_delay_ms)
+        screen = GameScreen(config.computer_levels(), config=config, step_delay_ms=self.step_delay_ms)
         screen.leave.connect(self.leave_game)
+        screen.rematch.connect(lambda: self.start_game(config))
+        screen.new_game.connect(self.new_game_from_game)
         self.navigator.add_screen('game', screen)
-        self.navigator.go('game')
+        self.navigator.reset('game')
         screen.start()
+
+    def new_game_from_game(self):
+        self.end_game()
+        self.navigator.reset('home')
+        self.navigator.go('new_game')
 
     def leave_game(self):
         self.end_game()
