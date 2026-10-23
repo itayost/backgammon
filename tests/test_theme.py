@@ -12,7 +12,8 @@ DESIGN = os.path.join(os.path.dirname(__file__), '..', 'DESIGN.md')
 
 def frontmatter_section(name):
     """The key/value lines of one top level section of the DESIGN.md frontmatter"""
-    text = open(DESIGN, encoding='utf-8').read().split('---')[1]
+    with open(DESIGN, encoding='utf-8') as f:
+        text = f.read().split('---')[1]
     match = re.search(rf'^{name}:\n((?:  .*\n)+)', text, re.MULTILINE)
     return match.group(1)
 

@@ -85,6 +85,9 @@ class HowToScreen(QWidget):
             grid.addLayout(text_box, row, 1)
         grid.setColumnStretch(1, 1)
         steps_layout.addLayout(grid)
+        steps_layout.addWidget(label('Keyboard: Tab to the board, arrow keys choose a checker or a point, Enter picks '
+                                     'it and Escape cancels. R rolls, U undoes, D ends the turn, Escape pauses.',
+                                     'muted', wrap=True))
         steps_layout.addStretch(1)
         self.start_button = button('Start a game', 'primary', 52)
         steps_layout.addWidget(self.start_button)

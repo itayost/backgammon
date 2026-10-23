@@ -380,5 +380,105 @@ class OverlayTest(unittest.TestCase):
         screen.shutdown()
 
 
+
+@unittest.skipIf(QApplication is None, 'PyQt6 is not installed')
+class BoardMotionAndKeyboardTest(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.app = QApplication.instance() or QApplication([])
+
+    def setUp(self):
+        from ui.screens.game import GameScreen
+        self.screen = GameScreen({})
+        self.session = self.screen.session
+        self.session.start(opening=(5, 3))
+        self.board = self.screen.board
+
+    def tearDown(self):
+        self.screen.shutdown()
+
+    def key(self, key):
+        self.app.sendEvent(self.board, QKeyEvent(QEvent.Type.KeyPress, key, Qt.KeyboardModifier.NoModifier))
+
+    def wait(self, ms):
+        from PyQt6.QtCore import QEventLoop, QTimer
+        loop = QEventLoop()
+        QTimer.singleShot(ms, loop.quit)
+        loop.exec()
+
+    def test_a_move_slides_and_lands(self):
+        self.screen.on_board_click('point', 17)
+        self.screen.on_board_click('point', 22)
+        self.assertEqual(len(self.board.flights), 1)
+        flight = self.board.flights[0]
+        self.assertEqual((flight.owner, flight.lands_on), (1, ('point', 22)))
+        self.assertEqual(self.board.hidden('point', 22), 1)
+        self.wait(400)
+        self.assertEqual(self.board.flights, [])
+
+    def test_a_hit_slides_to_the_bar(self):
+        self.session.board[20] = [1, -1]
+        self.session.board[13] = [4, -1]
+        self.session.refresh_legal()
+        self.screen.on_board_click('point', 17)
+        self.screen.on_board_click('point', 20)
+        self.assertEqual([f.lands_on for f in self.board.flights], [('point', 20), ('bar', -1)])
+
+    def test_a_new_position_ends_the_slide(self):
+        self.screen.on_board_click('point', 17)
+        self.screen.on_board_click('point', 22)
+        self.screen.undo()
+        self.assertEqual(self.board.flights, [])
+
+    def test_keyboard_moves_a_checker(self):
+        self.key(Qt.Key.Key_Right)
+        self.assertEqual(self.board.view.cursor, ('point', 12))
+        self.key(Qt.Key.Key_Left)
+        self.key(Qt.Key.Key_Left)
+        self.assertEqual(self.board.view.cursor, ('point', 19))
+        self.key(Qt.Key.Key_Left)
+        self.assertEqual(self.board.view.cursor, ('point', 17))
+        self.key(Qt.Key.Key_Return)
+        self.assertEqual(self.screen.selected, 17)
+        self.assertEqual(self.board.view.cursor, ('point', 20))
+        self.key(Qt.Key.Key_Right)
+        self.key(Qt.Key.Key_Space)
+        self.assertEqual(self.session.board[22], [1, 1])
+        self.assertIsNone(self.screen.selected)
+
+    def test_escape_cancels_then_pauses(self):
+        self.key(Qt.Key.Key_Return)
+        self.assertIsNotNone(self.screen.selected)
+        self.key(Qt.Key.Key_Escape)
+        self.assertIsNone(self.screen.selected)
+        self.assertFalse(self.screen.pause_overlay.isVisibleTo(self.screen))
+        self.key(Qt.Key.Key_Escape)
+        self.assertTrue(self.screen.pause_overlay.isVisibleTo(self.screen))
+
+    def test_keyboard_bears_off_through_the_tray(self):
+        from game.session import Phase
+        board = [[0, 0] for _ in range(26)]
+        board[0], board[25] = [0, 1], [0, -1]
+        board[22] = [2, 1]
+        board[3] = [2, -1]
+        self.session.board, self.session.player, self.session.phase = board, 1, Phase.AWAIT_ROLL
+        self.session.roll([6, 2])
+        self.key(Qt.Key.Key_Return)
+        self.assertEqual(self.screen.candidates(), [('point', 22), ('point', 24), ('tray', None)])
+        self.key(Qt.Key.Key_Right)
+        self.key(Qt.Key.Key_Return)
+        self.assertEqual(self.session.board[22], [1, 1])
+        self.assertEqual(self.session.dice_left, [2])
+
+    def test_the_bar_comes_first(self):
+        self.session.board[0] = [1, 1]
+        self.session.board[1] = [1, 1]
+        self.session.refresh_legal()
+        self.screen.refresh()
+        self.assertEqual(self.screen.candidates(), [('bar', None)])
+        self.key(Qt.Key.Key_Return)
+        self.assertEqual(self.screen.selected, 0)
+
+
 if __name__ == '__main__':
     unittest.main()
