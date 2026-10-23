@@ -29,12 +29,16 @@ a test keeps the two in sync. The Outfit and Inter fonts are bundled in `assets/
 The first player is decided by an opening roll: each side rolls one die and the higher one moves first
 with both dice. After that each turn is:
 
-1. Roll dice (R or Space).
+1. Roll dice (R).
 2. Click a highlighted checker, then a highlighted point. To bear off, click the Off tray on the right.
-   Click the checker again to cancel.
+   Click the checker again to cancel. Checkers slide to their new point, a hit checker slides to the bar.
 3. Undo (Ctrl+Z or U) takes back moves until the turn ends.
-4. Done (Enter or D) ends the turn once every die that can be played is used. When no move is possible
+4. Done (D) ends the turn once every die that can be played is used. When no move is possible
    the board says so and Done passes the turn.
+
+The board can also be played with the keyboard: Tab to it, the arrow keys move a dashed cursor over the
+checkers you can move (or, once one is picked, over its targets and the Off tray), Enter or Space picks,
+and Escape cancels the pick. Escape with nothing picked opens the pause menu.
 
 ## Code
 

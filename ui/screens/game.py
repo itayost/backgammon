@@ -104,6 +104,8 @@ class GameScreen(QWidget):
         self.show_hints = show_hints
         self.stats = stats
         self.recorded = False
+        self.cursor = None
+        self.last_board = None
         self.session = session or GameSession()
         self.selected = None
 
@@ -167,8 +169,11 @@ class GameScreen(QWidget):
         self.undo_button.clicked.connect(self.undo)
         self.done_button.clicked.connect(self.done)
         self.menu_button.clicked.connect(self.open_pause)
-        for keys, action in (('R', self.roll), ('Space', self.roll), ('Ctrl+Z', self.undo), ('U', self.undo),
-                             ('Return', self.done), ('D', self.done), ('Escape', self.toggle_pause)):
+        self.board.navigate.connect(self.move_cursor)
+        self.board.activate.connect(self.activate_cursor)
+        self.board.cancel.connect(self.cancel_selection)
+        # Space and Enter belong to the focused button or the board, so the turn keys are letters
+        for keys, action in (('R', self.roll), ('Ctrl+Z', self.undo), ('U', self.undo), ('D', self.done)):
             QShortcut(QKeySequence(keys), self, action, context=Qt.ShortcutContext.WidgetWithChildrenShortcut)
 
         self.ai = None
@@ -285,6 +290,64 @@ class GameScreen(QWidget):
         return {self.session.destination(start, jump) for start, jump in self.session.legal
                 if start == self.selected} - {None}
 
+    # Keyboard on the board
+
+    def candidates(self):
+        """What the keyboard cursor can stop on, in the player's direction of play: the movable
+        checkers, or once one is selected, the selected checker, its targets and the Off tray"""
+        session = self.session
+        if not self.human_turn() or session.phase != Phase.MOVING:
+            return []
+        bar = rules.bar_of(session.player)
+        token = lambda point: ('bar', None) if point == bar else ('point', point)
+        order = lambda point: -1 if point == bar else (point if session.player == 1 else 25 - point)
+        if self.selected is None:
+            return [token(point) for point in sorted({start for start, _ in session.legal}, key=order)]
+        tokens = [token(self.selected)] + [token(point) for point in sorted(self.targets(), key=order)]
+        if any(start == self.selected and session.destination(start, jump) is None
+               for start, jump in session.legal):
+            tokens.append(('tray', None))
+        return tokens
+
+    def move_cursor(self, step):
+        tokens = self.candidates()
+        if not tokens:
+            self.cursor = None
+        elif self.cursor not in tokens:
+            self.cursor = tokens[0]
+        else:
+            self.cursor = tokens[(tokens.index(self.cursor) + step) % len(tokens)]
+        self.refresh()
+
+    def activate_cursor(self):
+        if self.cursor is None or self.cursor not in self.candidates():
+            self.move_cursor(0)
+            return
+        kind, point = self.cursor
+        self.on_board_click(kind, point)
+        if self.selected is not None:
+            # Jump to the first place the selected checker can go
+            tokens = self.candidates()
+            self.cursor = tokens[1] if len(tokens) > 1 else tokens[0]
+        else:
+            self.cursor = None
+        self.refresh()
+
+    def cancel_selection(self):
+        if self.selected is not None:
+            self.cursor = ('bar', None) if self.selected == rules.bar_of(self.session.player) \
+                else ('point', self.selected)
+            self.selected = None
+            self.refresh()
+        else:
+            self.toggle_pause()
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key.Key_Escape:
+            self.cancel_selection()
+        else:
+            super().keyPressEvent(event)
+
     # Pause menu
 
     def open_pause(self):
@@ -331,6 +394,9 @@ class GameScreen(QWidget):
     def on_event(self, event, data):
         if event in ('game_started', 'turn_started', 'stepped', 'undone'):
             self.selected = None
+        if event == 'stepped' and self.last_board is not None:
+            self.board.animate_step(self.last_board, self.session.board, data['player'], data['start'],
+                                    data['end'], data['hit'])
         self.refresh()
         if event == 'game_over':
             self.record_result(finished=True)
@@ -434,9 +500,13 @@ class GameScreen(QWidget):
         targets = self.targets() if hints else set()
         tray = hints and selected is not None and any(
             start == selected and session.destination(start, jump) is None for start, jump in session.legal)
+        tokens = self.candidates()
+        if self.cursor not in tokens:
+            self.cursor = tokens[0] if tokens else None
+        self.last_board = [cell[:] for cell in session.board]
         self.board.set_view(BoardView(board=[cell[:] for cell in session.board], dice=self.dice_view(),
                                       sources=sources, selected=selected, targets=targets,
-                                      tray_target=tray, player=session.player))
+                                      tray_target=tray, player=session.player, cursor=self.cursor))
 
         for player, card in self.cards.items():
             active = session.phase != Phase.GAME_OVER and player == session.player
