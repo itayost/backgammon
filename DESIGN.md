@@ -242,6 +242,17 @@ The window is designed at 1280 by 800 px, with 24 px outer padding on the game s
 - **Dialogs:** centered over the scrim, 400 to 480 px wide.
 - **Spacing rhythm:** 4, 8, 12, 16, 24, 32, 48, 64 px. Inside cards 24 px padding; between related controls 12 px; between sections 24 to 28 px.
 
+### Web and phones
+
+The web app (`web/`) keeps this layout on wide screens and adapts it, rather than scaling it, on phones:
+
+- **Phone held upright:** one column. The opponent's card above the board, the player's card below it, then the hint and the turn controls at the bottom, within reach of the thumb. The board takes the full width and may grow taller than the desktop proportions (down to 0.8 wide for 1 tall) so the points stay long enough to touch.
+- **Wide screens and phones on their side:** the board beside the side panel. When the height is short the header moves into the panel and the cards and hint get tighter.
+- **The board** is drawn for the size it gets, not scaled from 904 by 692: frame, bar and tray get thinner on small boards, and checkers fill their point's width. A point owns its whole half column for presses, and on touch screens a press next to a highlighted point counts as on it.
+- **Player cards on narrow layouts** carry the turn tag on their top edge, so the names keep the whole width.
+- **New game on a phone:** one column, and Start game stays docked at the bottom of the screen.
+- Hover states only apply where the device can hover; touch gets a pressed state instead.
+
 ## Elevation & Depth
 
 Flat UI, lifted board. Panels, cards and buttons are flat and separated by tone (ink, slate, raised slate) and 1 px seams. Shadows are reserved for physical objects and for dialogs that float above the game.
