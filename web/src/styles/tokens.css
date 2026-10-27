@@ -1,0 +1,57 @@
+/* The Midnight Felt design tokens from DESIGN.md. DESIGN.md is the source of truth:
+   tests/theme.test.ts fails when a value here drifts from it. */
+:root {
+  --color-bg: #0E1617;
+  --color-surface: #162224;
+  --color-surface-2: #1E2E30;
+  --color-line: #2C4144;
+  --color-text: #EEE7D9;
+  --color-text-muted: #9DB0AD;
+  --color-text-disabled: #6F8380;
+  --color-accent: #F0A73A;
+  --color-accent-hover: #F5BC66;
+  --color-accent-ink: #1A1206;
+  --color-danger: #F08A7E;
+  --color-danger-surface: #2A1A19;
+  --color-danger-line: #5A2A26;
+  --color-success: #8FD3A8;
+  --color-board-frame: #3B2A1E;
+  --color-board-bar: #2E2016;
+  --color-board-felt: #1F4A44;
+  --color-point-light: #D9CDB4;
+  --color-point-dark: #A8473A;
+  --color-checker-white: #F4EFE4;
+  --color-checker-white-rim: #C9BFAE;
+  --color-checker-black: #1C1C1E;
+  --color-checker-black-rim: #4A4A50;
+  --color-scrim: rgba(5, 10, 11, 0.72);
+
+  --font-display: Outfit, system-ui, sans-serif;
+  --font-body: Inter, system-ui, sans-serif;
+
+  --rounded-sm: 6px;
+  --rounded-segment: 8px;
+  --rounded-md: 10px;
+  --rounded-choice: 12px;
+  --rounded-lg: 16px;
+  --rounded-pill: 999px;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+
+  --shadow-piece: 0 2px 6px rgba(0, 0, 0, 0.35);
+  --shadow-die: 0 4px 10px rgba(0, 0, 0, 0.4);
+  --shadow-lifted: 0 16px 40px rgba(0, 0, 0, 0.55);
+
+  /* Not in DESIGN.md: the hover tones of the desktop stylesheet in ui/theme.py, and the checker slide */
+  --color-surface-2-hover: #24373A;
+  --color-danger-surface-hover: #331F1D;
+  --slide-ms: 180ms;
+  --ease-out: cubic-bezier(0.33, 1, 0.68, 1);
+}

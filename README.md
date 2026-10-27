@@ -85,3 +85,31 @@ python -m ai.bench 200 td:medium medium   # td:<level> runs a level with the net
 ```
 python -m unittest discover -s tests
 ```
+
+## Web and phone app
+
+`web/` is the same game for browsers and phones, in TypeScript with React and Vite. It is being built in steps;
+this first step has the New game screen, the Game screen, and the pause and game over dialogs.
+
+```
+cd web
+npm install
+npm run dev        # http://localhost:5173
+npm test           # unit and parity tests
+npm run e2e        # end to end tests on a desktop window, a phone held upright and a phone on its side
+npm run build      # the site in web/dist
+```
+
+- `src/game`: ports of `rules.py`, `game/session.py` and `game/config.py`
+- `src/ai`: the computer player; it thinks in a Web Worker so the board keeps moving. The network weights
+  come from `ai/weights/td.npz`: after training a new network run `python web/scripts/export_weights.py`
+- `src/ui`: the screens, the board (SVG, drawn for the size it gets) and the screen logic in `gameModel.ts`,
+  a port of `ui/screens/game.py`
+- `tests/parity.test.ts` checks the port against the Python code: the same legal moves, the same reachable positions,
+  the same evaluations and the same moves chosen, on positions written by `python web/scripts/make_fixtures.py`.
+  Run that script again after changing the rules or the computer player in Python.
+
+On a phone held upright the opponent is above the board and you are below it, with the turn buttons at the bottom.
+Wide screens and phones on their side get the board beside the side panel. A checker moves by tapping or clicking it
+and then where it goes, or by dragging it; on a touch screen a tap next to a highlighted point counts as on it.
+The keyboard works as in the desktop app.

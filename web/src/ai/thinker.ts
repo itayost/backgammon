@@ -2,10 +2,12 @@ import type { Level } from '../game/config'
 import type { Board, Move } from '../game/rules'
 import type { ThinkRequest, ThinkResult } from './worker'
 
-/** Chooses the computer's move; null when it failed. cancel() drops the questions still open. */
+/** Chooses the computer's move; null when it failed. cancel() drops the questions still open,
+ * dispose() frees what the thinker holds once its game is over. */
 export interface Thinker {
   think(level: Level, board: Board, player: number, dice: number[]): Promise<Move[] | null>
   cancel(): void
+  dispose?(): void
 }
 
 /** Thinks in a Web Worker. Cancelling ends the worker, so a long search for a game that is gone
@@ -26,6 +28,10 @@ export class WorkerThinker implements Thinker {
 
   cancel() {
     if (this.open.size === 0) return
+    this.dispose()
+  }
+
+  dispose() {
     this.worker?.terminate()
     this.worker = null
     this.settleAll(null)
